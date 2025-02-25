@@ -10,7 +10,8 @@ import {
 } from '../lib/list';
 
 import {
-    type Queue, empty, is_empty, enqueue, dequeue, head as qhead
+    type Queue, empty, is_empty, enqueue, dequeue, head as qhead,
+    display_queue
 } from '../lib/queue_array';
 import {
     black,
@@ -43,7 +44,8 @@ type IntersectionRoads = {
  * @size the amount of intersections.
  */
 type Roads = {
-    roads: Array<IntersectionRoads>,
+    adj: Array<List<IntersectionID>>,
+    edges: Array<Array<Road | undefined>>,
     size: number
 }
 
@@ -96,7 +98,7 @@ const road_1_5 = {
     name: "1-5",
     speed: 100,
     travel_time: 120,
-    average_speed: 90
+    average_speed: 0
 }
 const road_2_3 = {
     connection: pair(2, 3),
@@ -122,77 +124,25 @@ const road_4_5 = {
 
 const road_connections: Array<Road> = [];
 
-const roads: Roads = {
-    roads: [
-        { // Index 0
-            adj: list(1, 2, 5),
-            road_properties: [
-                undefined,
-                road_0_1,
-                road_0_2,
-                undefined,
-                undefined,
-                road_0_5
-            ]
-        },
-        { // Index 1
-            adj: list(0, 3, 5),
-            road_properties: [
-                undefined,
-                undefined,
-                undefined,
-                road_1_3,
-                undefined,
-                road_1_5
-            ]
-        },
-        { // Index 2
-            adj: list(0, 3, 4),
-            road_properties: [
-                undefined,
-                undefined,
-                undefined,
-                road_2_3,
-                road_2_4,
-                undefined
-            ]
-        },
-        { // Index 3
-            adj: list(1, 2),
-            road_properties: [
-                undefined,
-                road_1_3,
-                road_2_3,
-                undefined,
-                undefined,
-                undefined
-            ]
-        },
-        { // Index 4
-            adj: list(2, 5),
-            road_properties: [
-                undefined,
-                undefined,
-                road_2_4,
-                undefined,
-                undefined,
-                road_4_5
-            ]
-        },
-        { // Index 5
-            adj: list(1, 4),
-            road_properties: [
-                undefined,
-                road_1_5,
-                undefined,
-                undefined,
-                road_4_5,
-                undefined
-            ]
-        },
+const _roads: Roads = {
+    adj: [
+        list(1, 2, 5),
+        list(0, 3, 5),
+        list(0, 3, 4),
+        list(1, 2),
+        list(2, 5),
+        list(1, 4)
+    ],
+    edges: [
+        [undefined, road_0_1, road_0_2, undefined, undefined, road_0_5],
+        [road_0_1, undefined, undefined, road_1_3, undefined, road_1_5],
+        [road_0_2, undefined, undefined, road_2_3, road_2_4, undefined],
+        [undefined, road_1_3, road_2_3, undefined, undefined, undefined],
+        [undefined, undefined, road_2_4, undefined, undefined, road_4_5],
+        [undefined, road_1_5, undefined, undefined, road_4_5, undefined],
     ],
     size: 6
-};
+}
 
 function base_travel_time(road: Road): number {
     return road.travel_time;
@@ -203,7 +153,7 @@ function current_travel_time(road: Road): number {
     const speed: number = road.speed;
     const travel_time: number = road.travel_time;
 
-    return average_speed < speed ? (average_speed / speed) * travel_time : travel_time;
+    return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
 
 /**
@@ -212,7 +162,7 @@ function current_travel_time(road: Road): number {
  * @param initial the id of the starting node. Default 0.
  * @returns A queue with the visited nodes in visiting order.
  */
-function shortest_path({ adj, size }: ListGraph,
+function shortest_path({ adj, edges, size }: Roads,
     initial: number, end: number): List<number> {
     let result: List<number> | null = null;  // nodes in the order they are being visited
     let parents: Array<List<number>> = []; // Track parent nodes
@@ -250,38 +200,53 @@ function shortest_path({ adj, size }: ListGraph,
     return result;
 }
 
-function fastest_path({ adj, size }: ListGraph,
-    initial: number = 0): Queue<number> {
-    const result = empty<number>();  // nodes in the order they are being visited
+
+function fastest_path({ adj, edges, size }: Roads,
+    initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<number>] {
+    const fastest_path_to_node: Array<List<number>> = [];  // nodes in the order they are being visited
     const pending = empty<number>();  // grey nodes to be processed
-    const colour = build_array(size, _ => white);
-    let current_fastest_time = Infinity;
+    let parents: Array<List<number>> = []; // Track parent nodes
+    let time_to_get_to_node: Array<number> = build_array(size, _ => Infinity);
+    //let current_fastest_time = Infinity;
 
     // visit a white node
-    function bfs_visit(current: number) {
-        colour[current] = grey;
-        enqueue(current, result);
-        enqueue(current, pending);
+    function bfs_visit(current: number, parent: List<number>, time: number) {
+        if (time < time_to_get_to_node[current]) {
+            parents[current] = parent;
+            time_to_get_to_node[current] = time;
+            if(current === end) {
+                fastest_path_to_node[time] = append(parent, list(current));
+            }
+            enqueue(current, pending);
+        }
     }
 
     // paint initial node grey (all others are initialized to white)
-    bfs_visit(initial);
+    bfs_visit(initial, null, 0);
 
     while (!is_empty(pending)) {
         // dequeue the head node of the grey queue
         const current = qhead(pending);
         dequeue(pending);
+        console.log("Current node: " + current);
 
-        // Paint all white nodes adjacent to current node grey and enqueue them.
-        const adjacent_white_nodes = filter(node => colour[node] === white,
-            adj[current]);
-        for_each(bfs_visit, adjacent_white_nodes);
+        const adjacent_white_nodes = adj[current];
 
-        // paint current node black; the node is now done.
-        colour[current] = black;
+        for_each(node => {
+            const parent: List<number> = parents[current];
+            let previous_travel_time = 0;
+            let travel_time = 0;
+            previous_travel_time = time_to_get_to_node[current];
+            travel_time = current_travel_time(edges[current][node]!);
+            console.log(current + "-" + node);
+            bfs_visit(node, append(parent, list(current)), previous_travel_time + travel_time);
+        }, adjacent_white_nodes);
     }
 
-    return result;
+    return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
 }
 
-//console.log(shortest_path(roads, 0, 5));
+const t = fastest_path(_roads, 1, 5);
+
+console.log(t[1]);
+console.log(t[2]);
