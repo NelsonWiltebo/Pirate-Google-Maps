@@ -20,7 +20,6 @@ import {
     ListGraph,
     white
 } from "../lib/graphs";
-import { ProbingHashtable, ph_insert, ph_delete, ph_empty, ph_lookup, ph_keys, hash_id } from '../lib/hashtables';
 
 /**
  * An intersection, represented as an ID, i.e a number.
@@ -43,7 +42,7 @@ type IntersectionRoads = {
  * @param roads the roads and intersection.
  * @size the amount of intersections.
  */
-type Roads = {
+type RoadNetwork = {
     adj: Array<List<IntersectionID>>,
     edges: Array<Array<Road | undefined>>,
     size: number
@@ -124,7 +123,7 @@ const road_4_5 = {
 
 const road_connections: Array<Road> = [];
 
-const _roads: Roads = {
+const _roads: RoadNetwork = {
     adj: [
         list(1, 2, 5),
         list(0, 3, 5),
@@ -157,59 +156,21 @@ function current_travel_time(road: Road): number {
 }
 
 /**
- * Get the visit order of a breadth-first traversal of a ListGraph.
- * @param adj the list graph
- * @param initial the id of the starting node. Default 0.
- * @returns A queue with the visited nodes in visiting order.
+ * Get the fastest path from one location (intersection) to another.
+ * @param adj the network of intersections adjacent to each other.
+ * @param edges the network of roads.
+ * @param initial the id of the starting location (intersection).
+ * @param end the id of the end location (intersection).
+ * @returns A list with the intersections in the order of the fastest path.
  */
-function shortest_path({ adj, edges, size }: Roads,
-    initial: number, end: number): List<number> {
-    let result: List<number> | null = null;  // nodes in the order they are being visited
-    let parents: Array<List<number>> = []; // Track parent nodes
-    const pending = empty<number>();  // grey nodes to be processed
-    const colour = build_array(size, _ => white);
-
-    // visit a white node
-    function bfs_visit(current: number, parent: List<number>) {
-        colour[current] = grey;
-        parents[current] = parent;
-        if (current === end) {
-            result = append(parent, list(current))
-        } else {
-            enqueue(current, pending);
-        }
-    }
-
-    // paint initial node grey (all others are initialized to white)
-    bfs_visit(initial, null);
-
-    while (!is_empty(pending)) {
-        // dequeue the head node of the grey queue
-        const current = qhead(pending);
-        dequeue(pending);
-
-        // Paint all white nodes adjacent to current node grey and enqueue them.
-        const adjacent_white_nodes = filter(node => colour[node] === white,
-            adj[current]);
-        for_each(node => bfs_visit(node, append(parents[current], list(current))), adjacent_white_nodes);
-
-        // paint current node black; the node is now done.
-        colour[current] = black;
-    }
-
-    return result;
-}
-
-
-function fastest_path({ adj, edges, size }: Roads,
+function fastest_path({ adj, edges, size }: RoadNetwork,
     initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<number>] {
-    const fastest_path_to_node: Array<List<number>> = [];  // nodes in the order they are being visited
-    const pending = empty<number>();  // grey nodes to be processed
-    let parents: Array<List<number>> = []; // Track parent nodes
+    const fastest_path_to_node: Array<List<number>> = [];  // the fastest paths to each node
+    const pending = empty<number>();  // nodes to be processed
+    let parents: Array<List<number>> = []; // track parent nodes
     let time_to_get_to_node: Array<number> = build_array(size, _ => Infinity);
-    //let current_fastest_time = Infinity;
-
-    // visit a white node
+    
+    // visit an node
     function bfs_visit(current: number, parent: List<number>, time: number) {
         if (time < time_to_get_to_node[current]) {
             parents[current] = parent;
@@ -221,7 +182,7 @@ function fastest_path({ adj, edges, size }: Roads,
         }
     }
 
-    // paint initial node grey (all others are initialized to white)
+    // visit initial intersection, and set the time it took to get their to 0
     bfs_visit(initial, null, 0);
 
     while (!is_empty(pending)) {
@@ -246,7 +207,7 @@ function fastest_path({ adj, edges, size }: Roads,
     return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
 }
 
-const t = fastest_path(_roads, 1, 5);
+const t = fastest_path(_roads, 2, 5);
 
 console.log(t[1]);
 console.log(t[2]);

@@ -83,60 +83,26 @@ function base_travel_time(road) {
     return road.travel_time;
 }
 function current_travel_time(road) {
-    //console.log("test");
     var average_speed = road.average_speed;
     var speed = road.speed;
     var travel_time = road.travel_time;
     return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
 /**
- * Get the visit order of a breadth-first traversal of a ListGraph.
- * @param adj the list graph
- * @param initial the id of the starting node. Default 0.
- * @returns A queue with the visited nodes in visiting order.
+ * Get the fastest path from one location (intersection) to another.
+ * @param adj the network of intersections adjacent to each other.
+ * @param edges the network of roads.
+ * @param initial the id of the starting location (intersection).
+ * @param end the id of the end location (intersection).
+ * @returns A list with the intersections in the order of the fastest path.
  */
-function shortest_path(_a, initial, end) {
-    var adj = _a.adj, edges = _a.edges, size = _a.size;
-    var result = null; // nodes in the order they are being visited
-    var parents = []; // Track parent nodes
-    var pending = (0, queue_array_1.empty)(); // grey nodes to be processed
-    var colour = (0, graphs_1.build_array)(size, function (_) { return graphs_1.white; });
-    // visit a white node
-    function bfs_visit(current, parent) {
-        colour[current] = graphs_1.grey;
-        parents[current] = parent;
-        if (current === end) {
-            result = (0, list_1.append)(parent, (0, list_1.list)(current));
-        }
-        else {
-            (0, queue_array_1.enqueue)(current, pending);
-        }
-    }
-    // paint initial node grey (all others are initialized to white)
-    bfs_visit(initial, null);
-    var _loop_1 = function () {
-        // dequeue the head node of the grey queue
-        var current = (0, queue_array_1.head)(pending);
-        (0, queue_array_1.dequeue)(pending);
-        // Paint all white nodes adjacent to current node grey and enqueue them.
-        var adjacent_white_nodes = (0, list_1.filter)(function (node) { return colour[node] === graphs_1.white; }, adj[current]);
-        (0, list_1.for_each)(function (node) { return bfs_visit(node, (0, list_1.append)(parents[current], (0, list_1.list)(current))); }, adjacent_white_nodes);
-        // paint current node black; the node is now done.
-        colour[current] = graphs_1.black;
-    };
-    while (!(0, queue_array_1.is_empty)(pending)) {
-        _loop_1();
-    }
-    return result;
-}
 function fastest_path(_a, initial, end) {
     var adj = _a.adj, edges = _a.edges, size = _a.size;
-    var fastest_path_to_node = []; // nodes in the order they are being visited
-    var pending = (0, queue_array_1.empty)(); // grey nodes to be processed
-    var parents = []; // Track parent nodes
+    var fastest_path_to_node = []; // the fastest paths to each node
+    var pending = (0, queue_array_1.empty)(); // nodes to be processed
+    var parents = []; // track parent nodes
     var time_to_get_to_node = (0, graphs_1.build_array)(size, function (_) { return Infinity; });
-    //let current_fastest_time = Infinity;
-    // visit a white node
+    // visit an node
     function bfs_visit(current, parent, time) {
         if (time < time_to_get_to_node[current]) {
             parents[current] = parent;
@@ -147,9 +113,9 @@ function fastest_path(_a, initial, end) {
             (0, queue_array_1.enqueue)(current, pending);
         }
     }
-    // paint initial node grey (all others are initialized to white)
+    // visit initial intersection, and set the time it took to get their to 0
     bfs_visit(initial, null, 0);
-    var _loop_2 = function () {
+    var _loop_1 = function () {
         // dequeue the head node of the grey queue
         var current = (0, queue_array_1.head)(pending);
         (0, queue_array_1.dequeue)(pending);
@@ -166,10 +132,10 @@ function fastest_path(_a, initial, end) {
         }, adjacent_white_nodes);
     };
     while (!(0, queue_array_1.is_empty)(pending)) {
-        _loop_2();
+        _loop_1();
     }
     return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
 }
-var t = fastest_path(_roads, 1, 5);
+var t = fastest_path(_roads, 2, 5);
 console.log(t[1]);
 console.log(t[2]);
