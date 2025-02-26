@@ -1,5 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.make_road = make_road;
+exports.empty_road_network = empty_road_network;
+exports.add_road = add_road;
+exports.fastest_path = fastest_path;
 var list_1 = require("../lib/list");
 var queue_array_1 = require("../lib/queue_array");
 var graphs_1 = require("../lib/graphs");
@@ -62,7 +66,7 @@ function road_going_to(road) {
  * @param road the road from which to check
  * @returns the if the road is one way traffic or not
  */
-function road_one_way(road) {
+function is_one_way(road) {
     return road.one_way;
 }
 /**
@@ -111,7 +115,7 @@ function add_road(road_network, road) {
     }
     else { }
     road_network.adj[going_from] = (0, list_1.pair)(going_to, adj[going_from]);
-    if (!road_one_way(road)) {
+    if (!is_one_way(road)) {
         if (adj[going_to] === undefined) {
             road_network.adj[going_to] = null;
             road_network.edges[going_to] = [];
@@ -124,23 +128,6 @@ function add_road(road_network, road) {
     road_network.edges[going_from][going_to] = road;
     road_network.size = road_network.adj.length;
 }
-var road_0_1 = make_road(0, 1, "0-1", 80, 60, 70);
-var road_0_2 = make_road(0, 2, "0-2", 80, 30, 80);
-var road_0_5 = make_road(0, 5, "0-5", 120, 150, 40);
-var road_1_3 = make_road(1, 3, "1-3", 70, 20, 50);
-var road_1_5 = make_road(1, 5, "1-5", 100, 120, 0);
-var road_2_3 = make_road(2, 3, "2-3", 50, 10, 40);
-var road_2_4 = make_road(2, 4, "2-4", 80, 50, 80);
-var road_4_5 = make_road(4, 5, "4-5", 80, 45, 80);
-var _roads0 = empty_road_network();
-add_road(_roads0, road_0_1);
-add_road(_roads0, road_0_2);
-add_road(_roads0, road_0_5);
-add_road(_roads0, road_1_3);
-add_road(_roads0, road_1_5);
-add_road(_roads0, road_2_3);
-add_road(_roads0, road_2_4);
-add_road(_roads0, road_4_5);
 /**
  * Get the fastest path from one location (intersection) to another.
  * @param adj the network of intersections adjacent to each other.
@@ -151,17 +138,17 @@ add_road(_roads0, road_4_5);
  */
 function fastest_path(_a, initial, end) {
     var adj = _a.adj, edges = _a.edges, size = _a.size;
-    var fastest_path_to_node = []; // the fastest paths to each node
     var pending = (0, queue_array_1.empty)(); // nodes to be processed
     var parents = []; // track parent nodes
     var time_to_get_to_node = (0, graphs_1.build_array)(size, function (_) { return Infinity; });
+    var fastest_way = null;
     // visit an node
     function bfs_visit(current, parent, time) {
         if (time < time_to_get_to_node[current]) {
             parents[current] = parent;
             time_to_get_to_node[current] = time;
             if (current === end) {
-                fastest_path_to_node[time] = (0, list_1.append)(parent, (0, list_1.list)(current));
+                fastest_way = (0, list_1.append)(parent, (0, list_1.list)(current));
             }
             (0, queue_array_1.enqueue)(current, pending);
         }
@@ -172,22 +159,44 @@ function fastest_path(_a, initial, end) {
         // dequeue the head node of the grey queue
         var current = (0, queue_array_1.head)(pending);
         (0, queue_array_1.dequeue)(pending);
-        console.log("Current node: " + current);
-        var adjacent_white_nodes = adj[current];
+        var adjacent_nodes = adj[current];
         (0, list_1.for_each)(function (node) {
             var parent = parents[current];
             var previous_travel_time = 0;
             var travel_time = 0;
             previous_travel_time = time_to_get_to_node[current];
             travel_time = current_travel_time(edges[current][node]);
-            console.log(current + "-" + node);
             bfs_visit(node, (0, list_1.append)(parent, (0, list_1.list)(current)), previous_travel_time + travel_time);
-        }, adjacent_white_nodes);
+        }, adjacent_nodes);
     };
     while (!(0, queue_array_1.is_empty)(pending)) {
         _loop_1();
     }
-    return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
+    return [parents, time_to_get_to_node, fastest_way];
 }
-var t1 = fastest_path(_roads0, 2, 5);
-console.log(t1[2]);
+// const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
+// const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
+// const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
+// const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
+// const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
+// const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40, true);
+// const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
+// const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
+// const _roads0: RoadNetwork = empty_road_network();
+// add_road(_roads0, road_0_1);
+// add_road(_roads0, road_0_2);
+// add_road(_roads0, road_0_5);
+// add_road(_roads0, road_1_3);
+// add_road(_roads0, road_1_5);
+// add_road(_roads0, road_2_3);
+// add_road(_roads0, road_2_4);
+// add_road(_roads0, road_4_5);
+// //console.log(_roads0.adj);
+// const t1 = fastest_path(_roads0, 3, 2);
+// console.log(t1[2]);
+var road_0_1 = make_road(0, 1, "0-1", 80, 60, 70);
+var road_0_2 = make_road(0, 2, "0-2", 80, 30, 80);
+var road_network_test = empty_road_network();
+add_road(road_network_test, road_0_1);
+add_road(road_network_test, road_0_2);
+console.dir(road_network_test, { depth: null });

@@ -1,4 +1,4 @@
-import { for_each, List, pair, head, tail, list, append, Pair } from '../lib/list';
+import { for_each, List, pair, head, tail, list, append, Pair, filter } from '../lib/list';
 import { empty, is_empty, enqueue, dequeue, head as qhead } from '../lib/queue_array';
 import { build_array } from "../lib/graphs";
 
@@ -15,7 +15,7 @@ type IntersectionID = number;
  *  the speed limit.
  * @param average_speed the average speed (km/h) of cars on the road.
  */
-type Road = {
+export type Road = {
     connection: Pair<IntersectionID, IntersectionID>
     name: string,
     speed_limit: number,
@@ -35,7 +35,7 @@ type Road = {
  * @param _average_speed the average speed of the vechiles on the road
  * @returns the road with the specified properties
  */
-function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
+export function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
     return {
         connection: pair(from, to),
         name: _name,
@@ -87,7 +87,7 @@ function road_going_to(road: Road): IntersectionID {
  * @param road the road from which to check
  * @returns the if the road is one way traffic or not
  */
-function road_one_way(road: Road): boolean {
+function is_one_way(road: Road): boolean {
     return road.one_way;
 }
 
@@ -121,7 +121,7 @@ function current_travel_time(road: Road): number {
  *  specified as the ID of the intersections connected by the road.
  * @param size the amount of intersections.
  */
-type RoadNetwork = {
+export type RoadNetwork = {
     adj: Array<List<IntersectionID>>,
     edges: Array<Array<Road | undefined>>,
     size: number
@@ -131,7 +131,7 @@ type RoadNetwork = {
  * Creates an empty road network.
  * @returns an empty road network
  */
-function empty_road_network(): RoadNetwork {
+export function empty_road_network(): RoadNetwork {
     return {
         adj: [],
         edges: [[]],
@@ -144,7 +144,7 @@ function empty_road_network(): RoadNetwork {
  * @param road_network the road network to add the road to
  * @param road the road to be added
  */
-function add_road(road_network: RoadNetwork, road: Road): void {
+export function add_road(road_network: RoadNetwork, road: Road): void {
     const going_from: IntersectionID = road_going_from(road);
     const going_to: IntersectionID = road_going_to(road);
 
@@ -156,7 +156,7 @@ function add_road(road_network: RoadNetwork, road: Road): void {
     } else { }
     road_network.adj[going_from] = pair(going_to, adj[going_from]);
     
-    if(!road_one_way(road)) {
+    if(!is_one_way(road)) {
         if(adj[going_to] === undefined) {
             road_network.adj[going_to] = null;
             road_network.edges[going_to] = [];
@@ -178,12 +178,12 @@ function add_road(road_network: RoadNetwork, road: Road): void {
  * @param end the id of the end location (intersection).
  * @returns A list with the intersections in the order of the fastest path.
  */
-function fastest_path({ adj, edges, size }: RoadNetwork,
-    initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<number>] {
-    const fastest_path_to_node: Array<List<number>> = [];  // the fastest paths to each node
+export function fastest_path({ adj, edges, size }: RoadNetwork,
+    initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<IntersectionID>] {
     const pending = empty<number>();  // nodes to be processed
     let parents: Array<List<number>> = []; // track parent nodes
     let time_to_get_to_node: Array<number> = build_array(size, _ => Infinity);
+    let fastest_way: List<IntersectionID> = null;
     
     // visit an node
     function bfs_visit(current: number, parent: List<number>, time: number) {
@@ -191,7 +191,7 @@ function fastest_path({ adj, edges, size }: RoadNetwork,
             parents[current] = parent;
             time_to_get_to_node[current] = time;
             if(current === end) {
-                fastest_path_to_node[time] = append(parent, list(current));
+                fastest_way = append(parent, list(current));
             }
             enqueue(current, pending);
         }
@@ -204,9 +204,8 @@ function fastest_path({ adj, edges, size }: RoadNetwork,
         // dequeue the head node of the grey queue
         const current = qhead(pending);
         dequeue(pending);
-        console.log("Current node: " + current);
 
-        const adjacent_white_nodes = adj[current];
+        const adjacent_nodes = adj[current];
 
         for_each(node => {
             const parent: List<number> = parents[current];
@@ -214,33 +213,43 @@ function fastest_path({ adj, edges, size }: RoadNetwork,
             let travel_time = 0;
             previous_travel_time = time_to_get_to_node[current];
             travel_time = current_travel_time(edges[current][node]!);
-            console.log(current + "-" + node);
             bfs_visit(node, append(parent, list(current)), previous_travel_time + travel_time);
-        }, adjacent_white_nodes);
+        }, adjacent_nodes);
     }
 
-    return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
+    return [parents, time_to_get_to_node, fastest_way];
 }
+
+// const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
+// const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
+// const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
+// const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
+// const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
+// const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40, true);
+// const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
+// const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
+
+// const _roads0: RoadNetwork = empty_road_network();
+// add_road(_roads0, road_0_1);
+// add_road(_roads0, road_0_2);
+// add_road(_roads0, road_0_5);
+// add_road(_roads0, road_1_3);
+// add_road(_roads0, road_1_5);
+// add_road(_roads0, road_2_3);
+// add_road(_roads0, road_2_4);
+// add_road(_roads0, road_4_5);
+
+// //console.log(_roads0.adj);
+
+// const t1 = fastest_path(_roads0, 3, 2);
+
+// console.log(t1[2]);
 
 const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
 const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
-const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
-const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
-const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
-const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40);
-const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
-const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
 
-const _roads0: RoadNetwork = empty_road_network();
-add_road(_roads0, road_0_1);
-add_road(_roads0, road_0_2);
-add_road(_roads0, road_0_5);
-add_road(_roads0, road_1_3);
-add_road(_roads0, road_1_5);
-add_road(_roads0, road_2_3);
-add_road(_roads0, road_2_4);
-add_road(_roads0, road_4_5);
+const road_network_test = empty_road_network();
+add_road(road_network_test, road_0_1);
+add_road(road_network_test, road_0_2);
 
-const t1 = fastest_path(_roads0, 2, 5);
-
-console.log(t1[2]);
+console.dir(road_network_test, {depth: null});
