@@ -17,6 +17,7 @@ import {
     ListGraph,
     white
 } from "../lib/graphs";
+import "../lib/p5";
 
 type Intersection = number;
 
