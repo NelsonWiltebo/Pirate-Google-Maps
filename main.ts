@@ -1,5 +1,5 @@
 import { for_each, List, pair, head, tail, list, append, Pair, filter } from '../lib/list';
-import { empty, is_empty, enqueue, dequeue, head as qhead } from '../lib/queue_array';
+import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from '../lib/queue_array';
 import { build_array } from "../lib/graphs";
 
 /**
@@ -51,7 +51,7 @@ export function make_road(from: IntersectionID, to: IntersectionID, _name: strin
  * @param road the road from which to get the name
  * @returns the name of the road
  */
-function road_name(road: Road): string {
+export function road_name(road: Road): string {
     return road.name;
 }
 
@@ -60,7 +60,7 @@ function road_name(road: Road): string {
  * @param road the road from which to get the speed limit
  * @returns the speed limit of the road
  */
-function road_speed_limit(road: Road): number {
+export function road_speed_limit(road: Road): number {
     return road.speed_limit;
 }
 
@@ -69,7 +69,7 @@ function road_speed_limit(road: Road): number {
  * @param road the road from which to get the starting intersection
  * @returns the ID of the intersection from which the road is going
  */
-function road_going_from(road: Road): IntersectionID {
+export function road_going_from(road: Road): IntersectionID {
     return head(road.connection);
 }
 
@@ -78,7 +78,7 @@ function road_going_from(road: Road): IntersectionID {
  * @param road the road from which to get the destination intersection
  * @returns the ID of the intersection to which the road is going
  */
-function road_going_to(road: Road): IntersectionID {
+export function road_going_to(road: Road): IntersectionID {
     return tail(road.connection);
 }
 
@@ -87,7 +87,7 @@ function road_going_to(road: Road): IntersectionID {
  * @param road the road from which to check
  * @returns the if the road is one way traffic or not
  */
-function is_one_way(road: Road): boolean {
+export function is_one_way(road: Road): boolean {
     return road.one_way;
 }
 
@@ -96,7 +96,7 @@ function is_one_way(road: Road): boolean {
  * @param road the road from which to get the base travel time
  * @returns the base travel time of the road
  */
-function base_travel_time(road: Road): number {
+export function base_travel_time(road: Road): number {
     return road.travel_time;
 }
 
@@ -106,10 +106,10 @@ function base_travel_time(road: Road): number {
  * @param road the road to get the current travel time of
  * @returns the time it takes to travel the road
  */
-function current_travel_time(road: Road): number {
+export function current_travel_time(road: Road): number {
     const average_speed: number = road.average_speed;
-    const speed: number = road.speed_limit;
-    const travel_time: number = road.travel_time;
+    const speed: number = road_speed_limit(road);
+    const travel_time: number = base_travel_time(road);
 
     return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
@@ -219,37 +219,3 @@ export function fastest_path({ adj, edges, size }: RoadNetwork,
 
     return [parents, time_to_get_to_node, fastest_way];
 }
-
-// const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
-// const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
-// const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
-// const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
-// const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
-// const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40, true);
-// const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
-// const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
-
-// const _roads0: RoadNetwork = empty_road_network();
-// add_road(_roads0, road_0_1);
-// add_road(_roads0, road_0_2);
-// add_road(_roads0, road_0_5);
-// add_road(_roads0, road_1_3);
-// add_road(_roads0, road_1_5);
-// add_road(_roads0, road_2_3);
-// add_road(_roads0, road_2_4);
-// add_road(_roads0, road_4_5);
-
-// //console.log(_roads0.adj);
-
-// const t1 = fastest_path(_roads0, 3, 2);
-
-// console.log(t1[2]);
-
-const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
-const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
-
-const road_network_test = empty_road_network();
-add_road(road_network_test, road_0_1);
-add_road(road_network_test, road_0_2);
-
-console.dir(road_network_test, {depth: null});

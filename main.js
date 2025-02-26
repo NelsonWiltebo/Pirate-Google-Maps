@@ -1,6 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.make_road = make_road;
+exports.road_name = road_name;
+exports.road_speed_limit = road_speed_limit;
+exports.road_going_from = road_going_from;
+exports.road_going_to = road_going_to;
+exports.is_one_way = is_one_way;
+exports.base_travel_time = base_travel_time;
+exports.current_travel_time = current_travel_time;
 exports.empty_road_network = empty_road_network;
 exports.add_road = add_road;
 exports.fastest_path = fastest_path;
@@ -85,8 +92,8 @@ function base_travel_time(road) {
  */
 function current_travel_time(road) {
     var average_speed = road.average_speed;
-    var speed = road.speed_limit;
-    var travel_time = road.travel_time;
+    var speed = road_speed_limit(road);
+    var travel_time = base_travel_time(road);
     return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
 /**
@@ -174,29 +181,3 @@ function fastest_path(_a, initial, end) {
     }
     return [parents, time_to_get_to_node, fastest_way];
 }
-// const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
-// const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
-// const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
-// const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
-// const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
-// const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40, true);
-// const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
-// const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
-// const _roads0: RoadNetwork = empty_road_network();
-// add_road(_roads0, road_0_1);
-// add_road(_roads0, road_0_2);
-// add_road(_roads0, road_0_5);
-// add_road(_roads0, road_1_3);
-// add_road(_roads0, road_1_5);
-// add_road(_roads0, road_2_3);
-// add_road(_roads0, road_2_4);
-// add_road(_roads0, road_4_5);
-// //console.log(_roads0.adj);
-// const t1 = fastest_path(_roads0, 3, 2);
-// console.log(t1[2]);
-var road_0_1 = make_road(0, 1, "0-1", 80, 60, 70);
-var road_0_2 = make_road(0, 2, "0-2", 80, 30, 80);
-var road_network_test = empty_road_network();
-add_road(road_network_test, road_0_1);
-add_road(road_network_test, road_0_2);
-console.dir(road_network_test, { depth: null });
