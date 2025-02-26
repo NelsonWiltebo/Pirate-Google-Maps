@@ -1,25 +1,6 @@
-import {
-    for_each, filter,
-    List,
-    pair,
-    head,
-    tail,
-    list,
-    append,
-    Pair
-} from '../lib/list';
-
-import {
-    type Queue, empty, is_empty, enqueue, dequeue, head as qhead,
-    display_queue
-} from '../lib/queue_array';
-import {
-    black,
-    build_array,
-    grey,
-    ListGraph,
-    white
-} from "../lib/graphs";
+import { for_each, List, pair, head, tail, list, append, Pair } from '../lib/list';
+import { empty, is_empty, enqueue, dequeue, head as qhead } from '../lib/queue_array';
+import { build_array } from "../lib/graphs";
 
 /**
  * An intersection, represented as an ID, i.e a number.
@@ -27,20 +8,118 @@ import {
 type IntersectionID = number;
 
 /**
- * All intersections adjacent to the intersection specified by the index in 
- *  {RoadConnections}, and the roads respective properties.
- * @param adj all adjacent intersections.
- * @param road_properties the index specifies the intersection the road is led to.
+ * {Road} represents an edge in the {RoadConnections} graph.
+ * @param name the name of the road.
+ * @param speed the speed limit (km/h) of the road.
+ * @param travel_time the time (minutes) it takes to travel the entire road according to
+ *  the speed limit.
+ * @param average_speed the average speed (km/h) of cars on the road.
  */
-type IntersectionRoads = {
-    adj: List<IntersectionID>
-    road_properties: Array<Road | undefined>
+type Road = {
+    connection: Pair<IntersectionID, IntersectionID>
+    name: string,
+    speed_limit: number,
+    travel_time: number,
+    average_speed: number,
+    one_way: boolean
+}
+
+/**
+ * Creates a road according to the following properties.
+ * @param from the ID of the intersection that the road is going from
+ * @param to the ID of the intersection that the road is going to
+ * @param _name the name of the road
+ * @param _speed_limit the speed limit on the road
+ * @param _travel_time the time it takes to travel the road according to the 
+ *  speed limit
+ * @param _average_speed the average speed of the vechiles on the road
+ * @returns the road with the specified properties
+ */
+function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
+    return {
+        connection: pair(from, to),
+        name: _name,
+        speed_limit: _speed_limit,
+        travel_time: _travel_time,
+        average_speed: _average_speed,
+        one_way: _one_way
+    }
+}
+
+/**
+ * Retrieves the name of the road.
+ * @param road the road from which to get the name
+ * @returns the name of the road
+ */
+function road_name(road: Road): string {
+    return road.name;
+}
+
+/**
+ * Retrieves the speed limit of the road.
+ * @param road the road from which to get the speed limit
+ * @returns the speed limit of the road
+ */
+function road_speed_limit(road: Road): number {
+    return road.speed_limit;
+}
+
+/**
+ * Retrieves the ID of the intersection from which the road is going from.
+ * @param road the road from which to get the starting intersection
+ * @returns the ID of the intersection from which the road is going
+ */
+function road_going_from(road: Road): IntersectionID {
+    return head(road.connection);
+}
+
+/**
+ * Retrieves the ID of the intersection to which the road is going to.
+ * @param road the road from which to get the destination intersection
+ * @returns the ID of the intersection to which the road is going
+ */
+function road_going_to(road: Road): IntersectionID {
+    return tail(road.connection);
+}
+
+/**
+ * Retrieves if the road is one way traffic.
+ * @param road the road from which to check
+ * @returns the if the road is one way traffic or not
+ */
+function road_one_way(road: Road): boolean {
+    return road.one_way;
+}
+
+/**
+ * Retrieves the base travel time for the road according to the speed limit.
+ * @param road the road from which to get the base travel time
+ * @returns the base travel time of the road
+ */
+function base_travel_time(road: Road): number {
+    return road.travel_time;
+}
+
+/**
+ * Retrieves the time it takes the travel the road according to the amount of 
+ *  traffic on the road, and the speed limit.
+ * @param road the road to get the current travel time of
+ * @returns the time it takes to travel the road
+ */
+function current_travel_time(road: Road): number {
+    const average_speed: number = road.average_speed;
+    const speed: number = road.speed_limit;
+    const travel_time: number = road.travel_time;
+
+    return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
 
 /**
  * All intersections and roads.
- * @param roads the roads and intersection.
- * @size the amount of intersections.
+ * @param adj every intersection and their corresponding adjacent intersections
+ * @param edges every road, found by the indexes of the array and nested array,
+ *  specified as the ID of the intersections connected by the road.
+ * @param size the amount of intersections.
  */
 type RoadNetwork = {
     adj: Array<List<IntersectionID>>,
@@ -49,110 +128,46 @@ type RoadNetwork = {
 }
 
 /**
- * {Road} represents an edge in the {RoadConnections} graph.
- * @param name the name of the road.
- * @param speed the speed limit (km/h) of the road.
- * @param travel_time the time (minutes) it takes to traverse the entire road according to
- *  the speed limit.
- * @param average_speed the average speed (km/h) of cars on the road.
+ * Creates an empty road network.
+ * @returns an empty road network
  */
-type Road = {
-    connection: Pair<IntersectionID, IntersectionID>
-    name: string,
-    speed: number,
-    travel_time: number,
-    average_speed: number
-};
-
-const road_0_1 = {
-    connection: pair(0, 1),
-    name: "0-1",
-    speed: 80,
-    travel_time: 60,
-    average_speed: 70
-}
-const road_0_2 = {
-    connection: pair(0, 2),
-    name: "0-2",
-    speed: 80,
-    travel_time: 30,
-    average_speed: 80
-}
-const road_0_5 = {
-    connection: pair(0, 5),
-    name: "0-5",
-    speed: 120,
-    travel_time: 150,
-    average_speed: 40
-}
-const road_1_3 = {
-    connection: pair(1, 3),
-    name: "1-3",
-    speed: 70,
-    travel_time: 20,
-    average_speed: 50
-}
-const road_1_5 = {
-    connection: pair(1, 5),
-    name: "1-5",
-    speed: 100,
-    travel_time: 120,
-    average_speed: 0
-}
-const road_2_3 = {
-    connection: pair(2, 3),
-    name: "2-3",
-    speed: 50,
-    travel_time: 10,
-    average_speed: 40
-}
-const road_2_4 = {
-    connection: pair(2, 4),
-    name: "2-4",
-    speed: 80,
-    travel_time: 50,
-    average_speed: 80
-}
-const road_4_5 = {
-    connection: pair(0, 1),
-    name: "4-5",
-    speed: 80,
-    travel_time: 45,
-    average_speed: 80
+function empty_road_network(): RoadNetwork {
+    return {
+        adj: [],
+        edges: [[]],
+        size: 0
+    }
 }
 
-const road_connections: Array<Road> = [];
+/**
+ * Adds a road to a road network.
+ * @param road_network the road network to add the road to
+ * @param road the road to be added
+ */
+function add_road(road_network: RoadNetwork, road: Road): void {
+    const going_from: IntersectionID = road_going_from(road);
+    const going_to: IntersectionID = road_going_to(road);
 
-const _roads: RoadNetwork = {
-    adj: [
-        list(1, 2, 5),
-        list(0, 3, 5),
-        list(0, 3, 4),
-        list(1, 2),
-        list(2, 5),
-        list(1, 4)
-    ],
-    edges: [
-        [undefined, road_0_1, road_0_2, undefined, undefined, road_0_5],
-        [road_0_1, undefined, undefined, road_1_3, undefined, road_1_5],
-        [road_0_2, undefined, undefined, road_2_3, road_2_4, undefined],
-        [undefined, road_1_3, road_2_3, undefined, undefined, undefined],
-        [undefined, undefined, road_2_4, undefined, undefined, road_4_5],
-        [undefined, road_1_5, undefined, undefined, road_4_5, undefined],
-    ],
-    size: 6
-}
+    const adj = road_network.adj;
 
-function base_travel_time(road: Road): number {
-    return road.travel_time;
-}
+    if(adj[going_from] === undefined) {
+        road_network.adj[going_from] = null;
+        road_network.edges[going_from] = [];
+    } else { }
+    road_network.adj[going_from] = pair(going_to, adj[going_from]);
+    
+    if(!road_one_way(road)) {
+        if(adj[going_to] === undefined) {
+            road_network.adj[going_to] = null;
+            road_network.edges[going_to] = [];
+        } else { }
+        road_network.adj[going_to] = pair(going_from, adj[going_to]);
+        road_network.edges[going_to][going_from] = road;
+    } else { }
 
-function current_travel_time(road: Road): number {
-    const average_speed: number = road.average_speed;
-    const speed: number = road.speed;
-    const travel_time: number = road.travel_time;
+    road_network.edges[going_from][going_to] = road;
 
-    return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
+    road_network.size = road_network.adj.length;
 }
 
 /**
@@ -207,7 +222,25 @@ function fastest_path({ adj, edges, size }: RoadNetwork,
     return [parents, time_to_get_to_node, fastest_path_to_node[time_to_get_to_node[end]]];
 }
 
-const t = fastest_path(_roads, 2, 5);
+const road_0_1: Road = make_road(0, 1, "0-1", 80, 60, 70);
+const road_0_2: Road = make_road(0, 2, "0-2", 80, 30, 80);
+const road_0_5: Road = make_road(0, 5, "0-5", 120, 150, 40);
+const road_1_3: Road = make_road(1, 3, "1-3", 70, 20, 50);
+const road_1_5: Road = make_road(1, 5, "1-5", 100, 120, 0);
+const road_2_3: Road = make_road(2, 3, "2-3", 50, 10, 40);
+const road_2_4: Road = make_road(2, 4, "2-4", 80, 50, 80);
+const road_4_5: Road = make_road(4, 5, "4-5", 80, 45, 80);
 
-console.log(t[1]);
-console.log(t[2]);
+const _roads0: RoadNetwork = empty_road_network();
+add_road(_roads0, road_0_1);
+add_road(_roads0, road_0_2);
+add_road(_roads0, road_0_5);
+add_road(_roads0, road_1_3);
+add_road(_roads0, road_1_5);
+add_road(_roads0, road_2_3);
+add_road(_roads0, road_2_4);
+add_road(_roads0, road_4_5);
+
+const t1 = fastest_path(_roads0, 2, 5);
+
+console.log(t1[2]);
