@@ -11,8 +11,8 @@ exports.current_travel_time = current_travel_time;
 exports.empty_road_network = empty_road_network;
 exports.add_road = add_road;
 exports.fastest_path = fastest_path;
-var list_1 = require("../lib/list");
-var queue_array_1 = require("../lib/queue_array");
+var list_1 = require("./lib/list");
+var queue_array_1 = require("./lib/queue_array");
 var graphs_1 = require("../lib/graphs");
 /**
  * Creates a road according to the following properties.
@@ -142,6 +142,7 @@ function add_road(road_network, road) {
  * @param initial the id of the starting location (intersection).
  * @param end the id of the end location (intersection).
  * @returns A list with the intersections in the order of the fastest path.
+ * @see
  */
 function fastest_path(_a, initial, end) {
     var adj = _a.adj, edges = _a.edges, size = _a.size;

@@ -1,5 +1,5 @@
-import { for_each, List, pair, head, tail, list, append, Pair, filter } from '../lib/list';
-import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from '../lib/queue_array';
+import { for_each, List, pair, head, tail, list, append, Pair, filter } from './lib/list';
+import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array';
 import { build_array } from "../lib/graphs";
 
 /**
@@ -172,11 +172,12 @@ export function add_road(road_network: RoadNetwork, road: Road): void {
 
 /**
  * Get the fastest path from one location (intersection) to another.
- * @param adj the network of intersections adjacent to each other.
- * @param edges the network of roads.
- * @param initial the id of the starting location (intersection).
- * @param end the id of the end location (intersection).
- * @returns A list with the intersections in the order of the fastest path.
+ * @param adj the network of intersections adjacent to each other
+ * @param edges the network of roads
+ * @param initial the id of the starting location (intersection)
+ * @param end the id of the end location (intersection)
+ * @returns a list with the intersections in the order of the fastest path
+ * @see lg_bfs_visit_order the original function this was based on (in './lib/graphs.ts')
  */
 export function fastest_path({ adj, edges, size }: RoadNetwork,
     initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<IntersectionID>] {
