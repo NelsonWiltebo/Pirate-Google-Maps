@@ -1,2 +1,3 @@
-main.js
-lib/*.js
+backend/*.js
+backend/lib/*.js
+interface/*.js

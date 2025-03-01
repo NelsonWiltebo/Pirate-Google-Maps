@@ -1,6 +1,6 @@
 import { for_each, List, pair, head, tail, list, append, Pair, filter } from './lib/list';
 import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array';
-import { build_array } from "../lib/graphs";
+import { build_array } from "./lib/graphs";
 
 /**
  * An intersection, represented as an ID, i.e a number.
