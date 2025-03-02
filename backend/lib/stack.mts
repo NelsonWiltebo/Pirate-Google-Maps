@@ -1,4 +1,4 @@
-import { head, tail, is_null, pair } from './list';
+import { head, tail, is_null, pair } from './list.mjs';
 
 /**
  * A homogeneous stack.

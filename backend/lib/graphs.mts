@@ -1,11 +1,11 @@
 import {
     type Pair, pair, head, tail,
     type List, is_null, for_each, filter, enum_list
-} from '../lib/list';
+} from './list.mjs';
 
 import {
     type Queue, empty, is_empty, enqueue, dequeue, head as qhead
-} from '../lib/queue_array';
+} from './queue_array.mjs';
 
 // Data type definitions
 

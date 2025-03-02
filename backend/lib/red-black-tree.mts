@@ -1,4 +1,4 @@
-import { head, tail, list, Pair, List, append, is_null } from './list';
+import { head, tail, list, Pair, List, append, is_null } from './list.mjs';
 
 const black: boolean = false;
 const red: boolean = true;

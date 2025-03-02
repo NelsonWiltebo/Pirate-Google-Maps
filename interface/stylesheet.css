@@ -3,6 +3,7 @@
     padding: 0;
     font-family: Arial, Helvetica, sans-serif;
     color: white;
+    box-sizing: border-box;
 }
 
 body {
@@ -79,13 +80,22 @@ nav {
 }
 
 .container {
-    bottom: 10px;
-    position: absolute;
+    position: relative;
     display: flex;
     flex-direction: column;
     background-color: #313338;
-    width: 250px;
+    width: 300px;
     padding: 20px;
     border-radius: 10px;
     border: 2px solid #474747;
+    gap: 20px;
+}
+
+.container input {
+    background-color: #383a40;
+    border: none;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    width: 100%;
+    padding: 7px;
 }

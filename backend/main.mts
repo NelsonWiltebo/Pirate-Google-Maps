@@ -1,6 +1,6 @@
-import { for_each, List, pair, head, tail, list, append, Pair, filter } from './lib/list';
-import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array';
-import { build_array } from "./lib/graphs";
+import { for_each, List, pair, head, tail, list, append, Pair, filter } from './lib/list.mjs';
+import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array.mjs';
+import { build_array } from './lib/graphs.mjs';
 
 /**
  * An intersection, represented as an ID, i.e a number.
@@ -22,6 +22,29 @@ export type Road = {
     travel_time: number,
     average_speed: number,
     one_way: boolean
+}
+
+/**
+ * All intersections and roads.
+ * @param adj every intersection and their corresponding adjacent intersections
+ * @param edges every road, found by the indexes of the array and nested array,
+ *  specified as the ID of the intersections connected by the road.
+ * @param size the amount of intersections.
+ */
+export type RoadNetwork = {
+    adj: Array<List<IntersectionID>>,
+    edges: Array<Array<Road | undefined>>,
+    size: number
+}
+
+/**
+ * A path from one intersection to another.
+ * @param path the path between the two intersections
+ * @param time the time it will take to travel the path
+ */
+export type Path = {
+    path: Array<IntersectionID>,
+    time: number
 }
 
 /**
@@ -115,19 +138,6 @@ export function current_travel_time(road: Road): number {
 }
 
 /**
- * All intersections and roads.
- * @param adj every intersection and their corresponding adjacent intersections
- * @param edges every road, found by the indexes of the array and nested array,
- *  specified as the ID of the intersections connected by the road.
- * @param size the amount of intersections.
- */
-export type RoadNetwork = {
-    adj: Array<List<IntersectionID>>,
-    edges: Array<Array<Road | undefined>>,
-    size: number
-}
-
-/**
  * Creates an empty road network.
  * @returns an empty road network
  */
@@ -180,43 +190,44 @@ export function add_road(road_network: RoadNetwork, road: Road): void {
  * @see lg_bfs_visit_order the original function this was based on (in './lib/graphs.ts')
  */
 export function fastest_path({ adj, edges, size }: RoadNetwork,
-    initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<IntersectionID>] {
+    initial: IntersectionID, end: IntersectionID): Path {
     const pending = empty<number>();  // nodes to be processed
-    let parents: Array<List<number>> = []; // track parent nodes
-    let time_to_get_to_node: Array<number> = build_array(size, _ => Infinity);
-    let fastest_way: List<IntersectionID> = null;
+    let parents: Array<Array<number>> = Array(size).fill(null); // track parent nodes
+    let time_to_get_to_node: Array<number> = Array(size).fill(Infinity);
+    let fastest_way: Array<number> = [];
+    let fastest_time: number = 0;
     
-    // visit an node
-    function bfs_visit(current: number, parent: List<number>, time: number) {
+    // visit a node
+    function bfs_visit(current: number, parent: Array<number>, time: number) {
         if (time < time_to_get_to_node[current]) {
             parents[current] = parent;
             time_to_get_to_node[current] = time;
-            if(current === end) {
-                fastest_way = append(parent, list(current));
+            if (current === end) {
+                fastest_way = [...parent, current];
+                fastest_time = time;
             }
             enqueue(current, pending);
         }
     }
 
-    // visit initial intersection, and set the time it took to get their to 0
-    bfs_visit(initial, null, 0);
+    // visit initial intersection, and set the time it took to get there to 0
+    bfs_visit(initial, [], 0);
 
     while (!is_empty(pending)) {
-        // dequeue the head node of the grey queue
+        // dequeue the head node of the queue
         const current = qhead(pending);
         dequeue(pending);
 
         const adjacent_nodes = adj[current];
 
         for_each(node => {
-            const parent: List<number> = parents[current];
-            let previous_travel_time = 0;
-            let travel_time = 0;
-            previous_travel_time = time_to_get_to_node[current];
-            travel_time = current_travel_time(edges[current][node]!);
-            bfs_visit(node, append(parent, list(current)), previous_travel_time + travel_time);
+            const parent: Array<number> = parents[current] || [];
+            let previous_travel_time = time_to_get_to_node[current];
+            let travel_time = current_travel_time(edges[current][node]!);
+            bfs_visit(node, [...parent, current], previous_travel_time + travel_time);
         }, adjacent_nodes);
     }
 
-    return [parents, time_to_get_to_node, fastest_way];
+    return { path: fastest_way, time: fastest_time };
 }
+

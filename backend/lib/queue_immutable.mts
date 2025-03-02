@@ -1,4 +1,4 @@
-import { head as list_head, tail, is_null, list, append } from './list';
+import { head as list_head, tail, is_null, list, append } from './list.mjs';
 
 /**
  * A homogeneous queue.
