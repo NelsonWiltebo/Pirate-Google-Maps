@@ -1,5 +1,11 @@
+//import { lg_shortest_path } from "../main";
+//import { shortest_path } from "../main";
+
+
+
 let width = 600;
 let height = 600;
+
 
 const graph = [
   [1, 2],
@@ -43,36 +49,74 @@ let positions = [];
 
 function draw_node(i, x, y, graph){
     fill(0);
+    stroke(0, 0, 0, 0);
     textAlign(CENTER,CENTER);
+    textSize(20);
       
-    fill(200);
-    circle(x, y, round(200 / graph.length));
-    text(i, x, y - 30);
-    positions.push({x, y});
+    fill(255);
+
+    let radius = 100 / graph.length;
+    radius = Math.max(radius, 30);
+    circle(x, y, round(radius));
+    fill(0);
+    text(i, x, y);
+    positions.push([x, y]);
 }
 
 function draw_edge(from_node, to_node) {
   //
   stroke(0, 0, 0);
-  let {from_x, from_y} = positions[from_node];
-  let {to_x, to_y} = positions[to_node];
-  line(from_x, from_y, to_x, to_y);
+  const pos_from = positions[from_node];
+  const pos_to = positions[to_node];
+  line(pos_from[0], pos_from[1], pos_to[0], pos_to[1]);
+  //line(100, 100, 400, 400);
 }
 
 function draw_graph(graph) {
   let circle_x = width / 2;
   let circle_y = height / 2;
 
-  let radius = 150;
-  let totalNodes = graph.length;
+  let total_nodes = graph.length;
+  let radius = 30 * total_nodes / 3;
+  radius = Math.max(radius, 120);
 
-  for (let i = 0; i < totalNodes; i++) {
-    let angle = map(i,0,totalNodes,0,2*Math.PI)
+  let x = width / 2;
+  let y = width / 10;
+
+  for (let i = 0; i < total_nodes; i++) {
+
+    // Circle
+    let angle = map(i,0,total_nodes,0,2*Math.PI)
     let x = circle_x + radius * Math.cos(angle);
     let y = circle_y + radius * Math.sin(angle);
     
-
     draw_node(i, x, y, graph);
+    if (i > 0) {
+      draw_edge(i, i - 1);
+    }
+    if (i === total_nodes - 1) {
+      draw_edge(0, total_nodes - 1);
+    }
+
+  }
+}
+
+
+function draw_graph_edges(graph){
+  // loopa igenom grafen
+  
+  // för varje index i graph
+    // för varje child node i index
+      // rita edge
+  
+
+  let total_nodes = graph.length;
+
+  for (let i = 0; i < total_nodes; i++) {
+    let child_nodes = graph[i].length;
+    for (let j = 0; j < child_nodes; j++) {
+      draw_edge(i, graph[i][j]);
+    }
   }
 }
 
@@ -83,7 +127,10 @@ function draw() {
   background("grey");
 
   draw_graph(graph);
-  draw_edge(0, 5);
+  draw_graph_edges(graph);
+
+  const path = lg_shortest_path(graph, 0, 5);
+  console.log(path);
 }
 
 
