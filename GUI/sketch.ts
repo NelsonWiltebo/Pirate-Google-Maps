@@ -1,21 +1,21 @@
 //import { lg_shortest_path } from "../main";
 //import { shortest_path } from "../main";
-//import { fastest_path, make_road, empty_road_network, add_road } from '../main'
+//import "../lib/"
+import { fastest_path, make_road, empty_road_network, add_road } from '../main'
+//import P5 from "../lib/p5"
 
 
+const width = 600;
+const height = 600;
 
-let width = 600;
-let height = 600;
-
-
-const graph = [
+/*const graph = [
   [1, 2],
   [0, 3, 5],
   [0, 3, 4],
-  [1, 2],
+  [1, 2],W
   [2, 5],
   [1, 4]
-];
+];*/
 
 const road_0_1 = make_road(0, 1, "0-1", 80, 60, 70);
 const road_0_2 = make_road(0, 2, "0-2", 80, 60, 70);
@@ -34,7 +34,7 @@ add_road(_roads0, road_2_3);
 add_road(_roads0, road_2_4);
 add_road(_roads0, road_4_5);
 
-const graph2 = [
+/*const graph2 = [
   [1, 2, 3],      // Node 0 is connected to Node 1, 2, 3
   [0, 4, 5],      // Node 1 is connected to Node 0, 4, 5
   [0, 6, 7],      // Node 2 is connected to Node 0, 6, 7
@@ -55,7 +55,7 @@ const graph2 = [
   [10],           // Node 17 is connected to Node 10
   [11],           // Node 18 is connected to Node 11
   [12],           // Node 19 is connected to Node 12
-];
+];*/
 
 function setup() {
   // put setup code here
