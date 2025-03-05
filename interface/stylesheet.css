@@ -66,7 +66,7 @@ nav {
 #main {
     top: 40px;
     position: relative;
-    padding: 10px;
+    padding: 20px;
     height: calc(100vh - 60px);
 }
 
@@ -84,18 +84,61 @@ nav {
     display: flex;
     flex-direction: column;
     background-color: #313338;
-    width: 300px;
     padding: 20px;
     border-radius: 10px;
     border: 2px solid #474747;
-    gap: 20px;
+    gap: 10px;
+    width: fit-content;
+}
+
+.container h5 {
+    color: #9499aa;
 }
 
 .container input {
-    background-color: #383a40;
+    background-color: hsl(225, 7%, 24%);
     border: none;
     border: 2px solid transparent;
     border-radius: 10px;
-    width: 100%;
+    width: 100px;
     padding: 7px;
+    height: 30px;
+}
+
+.side_by_side_input {
+    display: flex;
+    gap: 10px;
+}
+
+.point_select_button {
+    border: 2px solid #474a52;
+    border-radius: 5px;
+    height: 30px;
+    width: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.point_select_button:active {
+    filter: brightness(130%);
+}
+
+.point_select_button:hover  {
+    border-color: #4c4f59;
+    background-color: hsl(226, 8%, 22%);
+}
+
+.point_select_button:hover img {
+    filter: brightness(0) saturate(100%) invert(19%) sepia(4%) saturate(1245%) hue-rotate(187deg) brightness(150%) contrast(89%);
+}
+
+.point_select_button img {
+    max-width: 100%;
+    max-height: 100%;
+    filter: brightness(0) saturate(100%) invert(29%) sepia(9%) saturate(508%) hue-rotate(186deg) brightness(92%) contrast(91%);
+    object-fit: contain; /* Ensures the SVG scales within */
 }

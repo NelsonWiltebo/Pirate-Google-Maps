@@ -1,3 +1,4 @@
+import { head, pair, Pair, tail } from '../backend/lib/list.mjs';
 import { empty, enqueue, Queue, head as qhead, dequeue, is_empty, display_queue } from '../backend/lib/queue_array.mjs';
 import { add_road, empty_road_network, fastest_path, make_road, Path, Road, RoadNetwork } from '../backend/main.mjs'
 
@@ -73,20 +74,18 @@ function findNearbyPaths(referencePath: SVGPathElement, check_end: boolean = fal
     let nearbyPaths: Array<SVGPathElement> = [];
 
     allPaths?.forEach((path: SVGPathElement) => {
+        if(path === referencePath) return;
         const points: {start: DOMPoint, end: DOMPoint} = getPathPoints(path);
 
         // Check if any start or end point is within the threshold distance
         if (
-            !check_end && getDistance(refPoints.start.x, refPoints.start.y, points.start.x, points.start.y) < threshold ||
-            getDistance(refPoints.start.x, refPoints.start.y, points.end.x, points.end.y) < threshold
-        ) {
-            nearbyPaths.push(path);
-        } else if(
-            check_end && getDistance(refPoints.end.x, refPoints.end.y, points.start.x, points.start.y) < threshold ||
+            getDistance(refPoints.start.x, refPoints.start.y, points.start.x, points.start.y) < threshold ||
+            getDistance(refPoints.start.x, refPoints.start.y, points.end.x, points.end.y) < threshold ||
+            getDistance(refPoints.end.x, refPoints.end.y, points.start.x, points.start.y) < threshold ||
             getDistance(refPoints.end.x, refPoints.end.y, points.end.x, points.end.y) < threshold
         ) {
             nearbyPaths.push(path);
-        } else { }
+        }
     });
 
     return nearbyPaths;
@@ -103,84 +102,112 @@ function is_road_type_path(path: SVGPathElement): boolean {
 }
 
 function make_road_network_from_svg_paths(): void {
-    let pending: Queue<SVGPathElement> = empty();
-    let order: Queue<SVGPathElement> = empty();
-    const all_paths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll('path');
-    if(all_paths === undefined) {
+    let pending: SVGPathElement[] = [];
+    let order: SVGPathElement[] = [];
+    const allPaths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll('path');
+    if(!allPaths) {
         return;
     }
 
     let from_node = 0;
-    let to_node = 1;
 
-    let first_path: SVGPathElement = all_paths[0];
-    
-    function visit_path(path: SVGPathElement, from: number, to: number) {
-        path.dataset.to = String(to);
-        const all_nearyby_paths: Array<SVGPathElement> = findNearbyPaths(path, true);
-        const undiscovered_nearby_paths: Array<SVGPathElement> = all_nearyby_paths.filter(path => !is_road_type_path(path));
-        undiscovered_nearby_paths.forEach(adjacent_path => {
+    function temp(path: SVGPathElement): void {
+        if(!is_road_type_path(path)) {
+            path.classList.add("road");
+            path.dataset.from = String(from_node);
+        }
+        const adjacent_paths: Array<SVGPathElement> = findNearbyPaths(path).filter(path => !is_road_type_path(path));
+        adjacent_paths.forEach(adjacent_path => {
             adjacent_path.classList.add("road");
-            adjacent_path.dataset.from = String(from);
-            enqueue(adjacent_path, pending);
+            adjacent_path.dataset.from = String(from_node);
+        })
+        from_node++;
+    }
+    
+    console.log(allPaths);
+    allPaths?.forEach(path => {
+        temp(path);
+    });
+    //temp(allPaths[0]);
+}
+
+let is_selecting_starting_point: boolean = false;
+let is_selecting_destination_point: boolean = false;
+
+type Point = {x: number, y: number};
+
+let starting_point: Point | undefined = undefined;
+let destination_point: Point | undefined = undefined;
+
+function get_closes_node_from_point(point: Point): SVGPathElement | undefined {
+    let closest_path: SVGPathElement | undefined = undefined;
+    let shortest_distance: number = Infinity;
+    const all_paths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll('path');
+    if(all_paths) {
+        all_paths.forEach(path => {
+            const path_points: { start: DOMPoint, end: DOMPoint } = getPathPoints(path);
+            const path_start_distance: number = getDistance(point.x, point.y, path_points.start.x, path_points.start.y);
+            const path_end_distance: number = getDistance(point.x, point.y, path_points.end.x, path_points.end.y);
+            if(path_start_distance < shortest_distance) {
+                closest_path = path;
+                shortest_distance = path_start_distance;
+            }
+            if(path_end_distance < shortest_distance) {
+                closest_path = path;
+                shortest_distance = path_end_distance;
+            }
         });
     }
-
-    findNearbyPaths(first_path, false).forEach(path => {
-        enqueue(path, pending);
-        path.dataset.from = String(from_node);
-    });
-
-    //visit_path(first_path, from_node);
-    while(!is_empty(pending)) {
-        const path = qhead(pending);
-        dequeue(pending);
-        visit_path(path, from_node, to_node);
-    }
-
-    console.log(order);
-
-    //visit_path(all_paths[0], from_node, to_node);
-
-    // let node_index: number = 0;
-    // all_paths?.forEach(path => {
-    //     const all_nearyby_paths: Array<SVGPathElement> = findNearbyPaths(path);
-    //     const undiscovered_nearby_paths = all_nearyby_paths.filter(path => !path.classList.contains("road"));
-    //     console.log(node_index, undiscovered_nearby_paths);
-
-    //     let nearyby_nodes_index: number = node_index + 1;
-    //     undiscovered_nearby_paths.forEach(nearyby_path => {
-    //         make_road_type_path(nearyby_path, node_index, nearyby_nodes_index);
-    //         nearyby_nodes_index++;
-    //     })
-    //     node_index++;
-    // });
+    return closest_path;
 }
 
 function setup(): void {
     make_road_network_from_svg_paths();
 
+    const map_area: HTMLElement = document.getElementById("map_area")!;
+    
+    const starting_point_button: HTMLElement = document.getElementById('starting_point_button')!;
+    const destination_point_button: HTMLElement = document.getElementById('destination_point_button')!;
+    
     const starting_point_input: HTMLElement = document.getElementById('starting_point_input')!;
     const destination_input: HTMLElement = document.getElementById('destination_input')!;
 
-    let starting_point: number | null = null;
-    let destination_point: number | null = null;
+    let starting_node: number | undefined = undefined;
+    let destination_node: number | undefined = undefined;
     
     function updatePath() {
-        if (starting_point !== null && destination_point !== null) {
-            const directions: Path = fastest_path(road_network, starting_point, destination_point);
+        if (starting_node !== undefined && destination_node !== undefined) {
+            const directions: Path = fastest_path(road_network, starting_node, destination_node);
             color_path(directions.path);
         }
     }
+
+    starting_point_button.addEventListener('click', () => {
+        is_selecting_destination_point = false;
+        is_selecting_starting_point = !is_selecting_starting_point;
+    });
+    destination_point_button.addEventListener('click', () => {
+        is_selecting_starting_point = false;
+        is_selecting_destination_point = !is_selecting_destination_point;
+    });
     
-    starting_point_input.addEventListener('input', (e: Event) => {
-        const target: HTMLInputElement = e.target as HTMLInputElement;
-        starting_point = parseInt(target.value);
-        updatePath();
+    map_area.addEventListener('click', (e: MouseEvent) => {
+        if(is_selecting_starting_point) {
+            starting_point = {x: e.x, y: e.y};
+            //starting_node = get_closes_node_from_point(starting_point);
+        } else if(is_selecting_destination_point) {
+            destination_point = {x: e.x, y: e.y};
+        } else { }
     });
-    destination_input.addEventListener('input', (e: Event) => {
-        const target: HTMLInputElement = e.target as HTMLInputElement;
-        destination_point = parseInt(target.value);
-        updatePath();
-    });
+    
+    // starting_point_input.addEventListener('input', (e: Event) => {
+    //     const target: HTMLInputElement = e.target as HTMLInputElement;
+    //     starting_node = parseInt(target.value);
+    //     updatePath();
+    // });
+    // destination_input.addEventListener('input', (e: Event) => {
+    //     const target: HTMLInputElement = e.target as HTMLInputElement;
+    //     starting_node = parseInt(target.value);
+    //     updatePath();
+    // });
 }

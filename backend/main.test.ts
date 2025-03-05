@@ -1,5 +1,5 @@
-import { list, pair, head, tail } from './lib/list';
-import { Road, make_road, RoadNetwork, empty_road_network, add_road, fastest_path, road_name, road_speed_limit, road_going_from, road_going_to, is_one_way, base_travel_time, current_travel_time } from './main';
+import { list, pair, head, tail } from './lib/list.mjs';
+import { Road, make_road, RoadNetwork, empty_road_network, add_road, fastest_path, road_name, road_speed_limit, road_going_from, road_going_to, is_one_way, base_travel_time, current_travel_time } from './main.mjs';
 
 // Test make_road with one-way and two-way roads
 test('make_road correctly makes a two-way road', () => {
