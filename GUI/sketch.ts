@@ -2,8 +2,9 @@
 //import { shortest_path } from "../main";
 //import "../lib/"
 import { fastest_path, make_road, empty_road_network, add_road } from '../main'
-//import P5 from "../lib/p5"
-
+//import P5 from "p5";
+import * as P5 from "p5";
+import "./stylesheet.scss";
 
 const width = 600;
 const height = 600;
@@ -57,12 +58,15 @@ add_road(_roads0, road_4_5);
   [12],           // Node 19 is connected to Node 12
 ];*/
 
+/*
 function setup() {
   // put setup code here
   createCanvas(width, height);
   
 }
+  */
 
+/*
 let positions = [];
 
 function draw_node(i, x, y, graph){
@@ -137,9 +141,9 @@ function draw_graph_edges(graph){
     }
   }
 }
+*/
 
-// 
-
+/*
 function draw() {
   // put drawing code here
   background("grey");
@@ -150,6 +154,118 @@ function draw() {
   const path = fastest_path(_roads0, 0, 5)[2];
   console.log(path);
 }
+*/
 
 
 // Scale the pos of node according to height of graph
+
+
+//----------------
+
+const sketch = (p5: P5) => {
+	// Setup
+	p5.setup = () => {
+        // put setup code here
+        // p5.createCanvas(width, height);
+        const canvas = p5.createCanvas(width, height);
+		    canvas.parent("app");
+
+
+        p5.background("grey");
+    }
+
+    // Functions
+    let positions: Array<number[]> = [];
+
+    function draw_node(i : number, x : number, y : number, graph: Array<number[]>){
+        p5.fill(0);
+        p5.stroke(0, 0, 0, 0);
+        p5.textAlign(p5.CENTER, p5.CENTER);
+        p5.textSize(20);
+        
+        p5.fill(255);
+
+        let radius = 100 / graph.length;
+        radius = Math.max(radius, 30);
+        p5.circle(x, y, p5.round(radius));
+        p5.fill(0);
+        p5.text(i, x, y);
+        positions.push([x, y]);
+    }
+
+    function draw_edge(from_node: number, to_node: number) {
+        p5.stroke(0, 0, 0);
+        const pos_from = positions[from_node];
+        const pos_to = positions[to_node];
+        p5.line(pos_from[0], pos_from[1], pos_to[0], pos_to[1]);
+    }
+
+    function draw_graph(graph: Array<number[]>) {
+        let circle_x = width / 2;
+        let circle_y = height / 2;
+
+        let total_nodes = graph.length;
+        let radius = 30 * total_nodes / 3;
+        radius = Math.max(radius, 120);
+
+        //let x = width / 2;
+        //let y = width / 10;
+
+        for (let i = 0; i < total_nodes; i++) {
+            // Circle
+            let angle = p5.map(i,0,total_nodes,0,2*Math.PI)
+            let x = circle_x + radius * Math.cos(angle);
+            let y = circle_y + radius * Math.sin(angle);
+            
+            draw_node(i, x, y, graph);
+            if (i > 0) {
+                draw_edge(i, i - 1);
+            }
+            if (i === total_nodes - 1) {
+                draw_edge(0, total_nodes - 1);
+            }
+        }
+    }
+
+
+    function draw_graph_edges(graph : Array<number[]>){
+    // loopa igenom grafen
+    
+    // för varje index i graph
+        // för varje child node i index
+        // rita edge
+    
+
+    let total_nodes = graph.length;
+
+    for (let i = 0; i < total_nodes; i++) {
+        let child_nodes = graph[i].length;
+        for (let j = 0; j < child_nodes; j++) {
+            draw_edge(i, graph[i][j]);
+        }
+    }
+    }
+
+	// Draw
+	p5.draw = () => {
+		// put drawing code here
+        // p5.background("grey");
+
+        const graph = [
+        [1, 2],
+        [0, 3, 5],
+        [0, 3, 4],
+        [1, 2],
+        [2, 5],
+        [1, 4]
+        ];
+
+        draw_graph(graph);
+        draw_graph_edges(graph);
+      
+        const path = fastest_path(_roads0, 0, 5)[2];
+        console.log(path);
+	};
+};
+
+new P5(sketch);
