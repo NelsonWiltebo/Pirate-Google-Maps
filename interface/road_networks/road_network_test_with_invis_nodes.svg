@@ -1,0 +1,16 @@
+<svg width="295" height="385" viewBox="0 0 295 385" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M204 3L115.5 139.5" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="0" data-to="1"/>
+    <path d="M204.5 3L292 140.5" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="0" data-to="2"/>
+    <path d="M204.5 3C14 3 -90.5 225 115 382" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="0" data-to="5"/>
+    <path d="M115.5 139.5L207.5 248" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="1" data-to="3"/>
+    <path d="M291 141L207.5 248" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="2" data-to="3"/>
+    <path d="M115.5 139.5V381.5" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="1" data-to="5"/>
+    <path d="M292 140.5V382" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="2" data-to="4"/>
+    <path d="M292 382L115 382" stroke="black" stroke-width="5" stroke-linecap="round" class="road" data-from="4" data-to="5"/>
+    <circle cx="203.5" cy="3.5" r="2.5" fill="none" class="node" id="0"/>
+    <circle cx="291.5" cy="141.5" r="2.5" fill="none" class="node" id="2"/>
+    <circle cx="115.5" cy="140.5" r="2.5" fill="none" class="node" id="1"/>
+    <circle cx="207.5" cy="247.5" r="2.5" fill="none" class="node" id="3"/>
+    <circle cx="291.5" cy="381.5" r="2.5" fill="none" class="node" id="4"/>
+    <circle cx="115.5" cy="381.5" r="2.5" fill="none" class="node" id="5"/>
+</svg>

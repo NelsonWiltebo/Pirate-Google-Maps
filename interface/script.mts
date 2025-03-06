@@ -68,69 +68,6 @@ function getDistance(x1: number, y1: number, x2: number, y2: number): number {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-function findNearbyPaths(referencePath: SVGPathElement, check_end: boolean = false, threshold: number = 10): Array<SVGPathElement> {
-    const allPaths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll("path");
-    const refPoints: {start: DOMPoint, end: DOMPoint} = getPathPoints(referencePath);
-    let nearbyPaths: Array<SVGPathElement> = [];
-
-    allPaths?.forEach((path: SVGPathElement) => {
-        if(path === referencePath) return;
-        const points: {start: DOMPoint, end: DOMPoint} = getPathPoints(path);
-
-        // Check if any start or end point is within the threshold distance
-        if (
-            getDistance(refPoints.start.x, refPoints.start.y, points.start.x, points.start.y) < threshold ||
-            getDistance(refPoints.start.x, refPoints.start.y, points.end.x, points.end.y) < threshold ||
-            getDistance(refPoints.end.x, refPoints.end.y, points.start.x, points.start.y) < threshold ||
-            getDistance(refPoints.end.x, refPoints.end.y, points.end.x, points.end.y) < threshold
-        ) {
-            nearbyPaths.push(path);
-        }
-    });
-
-    return nearbyPaths;
-}
-
-function make_road_type_path(path: SVGPathElement, from: number, to: number): void {
-    path.classList.add("road");
-    path.dataset.from = String(from);
-    path.dataset.to = String(to);
-}
-
-function is_road_type_path(path: SVGPathElement): boolean {
-    return path.classList.contains("road");
-}
-
-function make_road_network_from_svg_paths(): void {
-    let pending: SVGPathElement[] = [];
-    let order: SVGPathElement[] = [];
-    const allPaths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll('path');
-    if(!allPaths) {
-        return;
-    }
-
-    let from_node = 0;
-
-    function temp(path: SVGPathElement): void {
-        if(!is_road_type_path(path)) {
-            path.classList.add("road");
-            path.dataset.from = String(from_node);
-        }
-        const adjacent_paths: Array<SVGPathElement> = findNearbyPaths(path).filter(path => !is_road_type_path(path));
-        adjacent_paths.forEach(adjacent_path => {
-            adjacent_path.classList.add("road");
-            adjacent_path.dataset.from = String(from_node);
-        })
-        from_node++;
-    }
-    
-    console.log(allPaths);
-    allPaths?.forEach(path => {
-        temp(path);
-    });
-    //temp(allPaths[0]);
-}
-
 let is_selecting_starting_point: boolean = false;
 let is_selecting_destination_point: boolean = false;
 
@@ -139,31 +76,31 @@ type Point = {x: number, y: number};
 let starting_point: Point | undefined = undefined;
 let destination_point: Point | undefined = undefined;
 
-function get_closes_node_from_point(point: Point): SVGPathElement | undefined {
-    let closest_path: SVGPathElement | undefined = undefined;
+function get_closes_node_from_point(point: Point): SVGCircleElement | undefined {
+    const mapBBox: DOMRect = document!.getElementById('map')!.getBoundingClientRect();
+
+    let closest_node: SVGCircleElement | undefined = undefined;
     let shortest_distance: number = Infinity;
-    const all_paths: NodeListOf<SVGPathElement> | undefined = get_svg()?.querySelectorAll('path');
-    if(all_paths) {
-        all_paths.forEach(path => {
-            const path_points: { start: DOMPoint, end: DOMPoint } = getPathPoints(path);
-            const path_start_distance: number = getDistance(point.x, point.y, path_points.start.x, path_points.start.y);
-            const path_end_distance: number = getDistance(point.x, point.y, path_points.end.x, path_points.end.y);
-            if(path_start_distance < shortest_distance) {
-                closest_path = path;
-                shortest_distance = path_start_distance;
-            }
-            if(path_end_distance < shortest_distance) {
-                closest_path = path;
-                shortest_distance = path_end_distance;
+    const all_nodes: NodeListOf<SVGCircleElement> | undefined = get_svg()?.querySelectorAll('.node');
+    if(all_nodes) {
+        all_nodes.forEach(node => {
+            const nodeBBox = node.getBBox();
+            const node_point: Point = {
+                x: nodeBBox.x + mapBBox.x,
+                y: nodeBBox.y + mapBBox.y
+            };
+            const node_distance: number = getDistance(point.x, point.y, node_point.x, node_point.y)
+            if(node_distance < shortest_distance) {
+                closest_node = node;
+                shortest_distance = node_distance;
             }
         });
     }
-    return closest_path;
+    //console.log(closest_node!.getBBox())
+    return closest_node;
 }
 
 function setup(): void {
-    make_road_network_from_svg_paths();
-
     const map_area: HTMLElement = document.getElementById("map_area")!;
     
     const starting_point_button: HTMLElement = document.getElementById('starting_point_button')!;
@@ -179,6 +116,8 @@ function setup(): void {
         if (starting_node !== undefined && destination_node !== undefined) {
             const directions: Path = fastest_path(road_network, starting_node, destination_node);
             color_path(directions.path);
+            console.log(starting_node, destination_node);
+            console.log(directions.path);
         }
     }
 
@@ -194,9 +133,16 @@ function setup(): void {
     map_area.addEventListener('click', (e: MouseEvent) => {
         if(is_selecting_starting_point) {
             starting_point = {x: e.x, y: e.y};
-            //starting_node = get_closes_node_from_point(starting_point);
+            const closest_node: SVGCircleElement = get_closes_node_from_point(starting_point)!;
+            starting_node = parseInt(closest_node.id);
+            is_selecting_destination_point = false;
+            updatePath();
         } else if(is_selecting_destination_point) {
             destination_point = {x: e.x, y: e.y};
+            const closest_node: SVGCircleElement = get_closes_node_from_point(destination_point)!;
+            destination_node = parseInt(closest_node.id);
+            is_selecting_destination_point = false;
+            updatePath();
         } else { }
     });
     

@@ -79,6 +79,10 @@ nav {
     height: 100%;
 }
 
+#map_area embed {
+    pointer-events: none;
+}
+
 .container {
     position: relative;
     display: flex;
