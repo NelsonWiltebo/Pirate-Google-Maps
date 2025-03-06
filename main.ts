@@ -2,10 +2,22 @@ import { for_each, List, pair, head, tail, list, append, Pair, filter } from './
 import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array';
 import { build_array } from "../lib/graphs";
 
-/**
- * An intersection, represented as an ID, i.e a number.
- */
+type Position = {
+    x: number,
+    y: number
+}
+
 type IntersectionID = number;
+
+/**
+ * An intersection.
+ * @param id the id of the intersection
+ * @param pos the x and y coordinates of the intersection
+ */
+export type Intersection = {
+    id: IntersectionID,
+    pos: Position
+};
 
 /**
  * {Road} represents an edge in the {RoadConnections} graph.
@@ -25,9 +37,19 @@ export type Road = {
 }
 
 /**
+ * A path from one intersection to another.
+ * @param path the path between the two intersections
+ * @param time the time it will take to travel the path
+ */
+export type Path = {
+    path: Array<IntersectionID>,
+    time: number
+}
+
+/**
  * Creates a road according to the following properties.
- * @param from the ID of the intersection that the road is going from
- * @param to the ID of the intersection that the road is going to
+ * @param from the intersection that the road is going from
+ * @param to the intersection that the road is going to
  * @param _name the name of the road
  * @param _speed_limit the speed limit on the road
  * @param _travel_time the time it takes to travel the road according to the 
@@ -122,6 +144,7 @@ export function current_travel_time(road: Road): number {
  * @param size the amount of intersections.
  */
 export type RoadNetwork = {
+    intersections: Array<Intersection>,
     adj: Array<List<IntersectionID>>,
     edges: Array<Array<Road | undefined>>,
     size: number
@@ -133,9 +156,41 @@ export type RoadNetwork = {
  */
 export function empty_road_network(): RoadNetwork {
     return {
+        intersections: [],
         adj: [],
         edges: [[]],
         size: 0
+    }
+}
+
+/**
+ * Makes an intersection with a specified position.
+ * @param x the x coordinate for the intersection
+ * @param y the y coordinate for the intersection
+ * @returns an intersection with the specified position and id.
+*/
+export function make_intersection(_id: IntersectionID, x: number, y: number) {
+    return {
+        id: _id,
+        pos: {x, y}
+    }
+}
+
+/**
+ * Adds an intersection to a road-network.
+ * @precondition intersection.id <= road_network.size
+ * @param road_network the road network to add the intersection to
+ * @param intersection the intersection to be added
+ */
+export function add_intersection(road_network: RoadNetwork, intersection: Intersection): void {
+    const intersection_id: number = intersection.id;
+    if(intersection_id > road_network.size + 1) {
+        console.log("Intersection id is out of the range of the size of the road-network");
+    } else if(road_network.intersections[intersection_id] === undefined) {
+        road_network.intersections[intersection_id] = intersection;
+        road_network.size++;
+    } else {
+        console.log("Intersection " + intersection_id + " already exists.")
     }
 }
 
@@ -147,27 +202,30 @@ export function empty_road_network(): RoadNetwork {
 export function add_road(road_network: RoadNetwork, road: Road): void {
     const going_from: IntersectionID = road_going_from(road);
     const going_to: IntersectionID = road_going_to(road);
+    if(road_network.intersections[going_from] !== undefined
+            || road_network.intersections[going_to] !== undefined) {
+        
+        const adj = road_network.adj;
 
-    const adj = road_network.adj;
-
-    if(adj[going_from] === undefined) {
-        road_network.adj[going_from] = null;
-        road_network.edges[going_from] = [];
-    } else { }
-    road_network.adj[going_from] = pair(going_to, adj[going_from]);
-    
-    if(!is_one_way(road)) {
-        if(adj[going_to] === undefined) {
-            road_network.adj[going_to] = null;
-            road_network.edges[going_to] = [];
+        if(adj[going_from] === undefined) {
+            road_network.adj[going_from] = null;
+            road_network.edges[going_from] = [];
         } else { }
-        road_network.adj[going_to] = pair(going_from, adj[going_to]);
-        road_network.edges[going_to][going_from] = road;
-    } else { }
-
-    road_network.edges[going_from][going_to] = road;
-
-    road_network.size = road_network.adj.length;
+        road_network.adj[going_from] = pair(going_to, adj[going_from]);
+        
+        if(!is_one_way(road)) {
+            if(adj[going_to] === undefined) {
+                road_network.adj[going_to] = null;
+                road_network.edges[going_to] = [];
+            } else { }
+            road_network.adj[going_to] = pair(going_from, adj[going_to]);
+            road_network.edges[going_to][going_from] = road;
+        } else { }
+    
+        road_network.edges[going_from][going_to] = road;
+    } else {
+        console.log("The intersections the road is either going from or to doesn't exist");
+    }
 }
 
 /**
@@ -180,43 +238,43 @@ export function add_road(road_network: RoadNetwork, road: Road): void {
  * @see lg_bfs_visit_order the original function this was based on (in './lib/graphs.ts')
  */
 export function fastest_path({ adj, edges, size }: RoadNetwork,
-    initial: IntersectionID, end: IntersectionID): [Array<List<number>>, Array<number>, List<IntersectionID>] {
+    initial: IntersectionID, end: IntersectionID): Path {
     const pending = empty<number>();  // nodes to be processed
-    let parents: Array<List<number>> = []; // track parent nodes
-    let time_to_get_to_node: Array<number> = build_array(size, _ => Infinity);
-    let fastest_way: List<IntersectionID> = null;
+    let parents: Array<Array<number>> = Array(size).fill(null); // track parent nodes
+    let time_to_get_to_node: Array<number> = Array(size).fill(Infinity);
+    let fastest_way: Array<number> = [];
+    let fastest_time: number = 0;
     
-    // visit an node
-    function bfs_visit(current: number, parent: List<number>, time: number) {
+    // visit a node
+    function bfs_visit(current: number, parent: Array<number>, time: number) {
         if (time < time_to_get_to_node[current]) {
             parents[current] = parent;
             time_to_get_to_node[current] = time;
-            if(current === end) {
-                fastest_way = append(parent, list(current));
+            if (current === end) {
+                fastest_way = [...parent, current];
+                fastest_time = time;
             }
             enqueue(current, pending);
         }
     }
 
-    // visit initial intersection, and set the time it took to get their to 0
-    bfs_visit(initial, null, 0);
+    // visit initial intersection, and set the time it took to get there to 0
+    bfs_visit(initial, [], 0);
 
     while (!is_empty(pending)) {
-        // dequeue the head node of the grey queue
+        // dequeue the head node of the queue
         const current = qhead(pending);
         dequeue(pending);
 
         const adjacent_nodes = adj[current];
 
         for_each(node => {
-            const parent: List<number> = parents[current];
-            let previous_travel_time = 0;
-            let travel_time = 0;
-            previous_travel_time = time_to_get_to_node[current];
-            travel_time = current_travel_time(edges[current][node]!);
-            bfs_visit(node, append(parent, list(current)), previous_travel_time + travel_time);
+            const parent: Array<number> = parents[current] || [];
+            let previous_travel_time = time_to_get_to_node[current];
+            let travel_time = current_travel_time(edges[current][node]!);
+            bfs_visit(node, [...parent, current], previous_travel_time + travel_time);
         }, adjacent_nodes);
     }
 
-    return [parents, time_to_get_to_node, fastest_way];
+    return { path: fastest_way, time: fastest_time };
 }
