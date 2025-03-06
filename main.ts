@@ -5,7 +5,10 @@ import { build_array } from "../lib/graphs";
 /**
  * An intersection, represented as an ID, i.e a number.
  */
-type IntersectionID = number;
+type Intersection = {
+    id: number,
+    pos: {x: number, y: number}
+};
 
 /**
  * {Road} represents an edge in the {RoadConnections} graph.
@@ -16,7 +19,7 @@ type IntersectionID = number;
  * @param average_speed the average speed (km/h) of cars on the road.
  */
 export type Road = {
-    connection: Pair<IntersectionID, IntersectionID>
+    connection: Pair<Intersection, Intersection>
     name: string,
     speed_limit: number,
     travel_time: number,
@@ -35,7 +38,7 @@ export type Road = {
  * @param _average_speed the average speed of the vechiles on the road
  * @returns the road with the specified properties
  */
-export function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
+export function make_road(from: Intersection, to: Intersection, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
     return {
         connection: pair(from, to),
         name: _name,
@@ -69,7 +72,7 @@ export function road_speed_limit(road: Road): number {
  * @param road the road from which to get the starting intersection
  * @returns the ID of the intersection from which the road is going
  */
-export function road_going_from(road: Road): IntersectionID {
+export function road_going_from(road: Road): Intersection {
     return head(road.connection);
 }
 
@@ -78,7 +81,7 @@ export function road_going_from(road: Road): IntersectionID {
  * @param road the road from which to get the destination intersection
  * @returns the ID of the intersection to which the road is going
  */
-export function road_going_to(road: Road): IntersectionID {
+export function road_going_to(road: Road): Intersection {
     return tail(road.connection);
 }
 
@@ -122,7 +125,7 @@ export function current_travel_time(road: Road): number {
  * @param size the amount of intersections.
  */
 export type RoadNetwork = {
-    adj: Array<List<IntersectionID>>,
+    adj: Array<List<Intersection>>,
     edges: Array<Array<Road | undefined>>,
     size: number
 }
@@ -145,8 +148,10 @@ export function empty_road_network(): RoadNetwork {
  * @param road the road to be added
  */
 export function add_road(road_network: RoadNetwork, road: Road): void {
-    const going_from: IntersectionID = road_going_from(road);
-    const going_to: IntersectionID = road_going_to(road);
+    const going_from: Intersection = road_going_from(road);
+    const going_to: Intersection = road_going_to(road);
+    const going_from_id: number = going_from.id;
+    const going_to_id: number = going_to.id;
 
     const adj = road_network.adj;
 
