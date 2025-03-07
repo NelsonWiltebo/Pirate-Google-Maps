@@ -1,2 +1,4 @@
-main.js
+*.js
+*.mjs
 lib/*.js
+lib/*.mjs

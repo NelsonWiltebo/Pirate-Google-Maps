@@ -1,6 +1,6 @@
 // NOTE: these heaps are MIN-heaps, meaning that the smallest element is on top.
 
-import { type Pair, pair } from '../lib/list';
+import { type Pair, pair } from './list.mjs';
 
 
 /**
