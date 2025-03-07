@@ -1,5 +1,5 @@
 import { for_each } from "../lib/list.mjs";
-import { add_intersection, add_road, empty_road_network, make_intersection, make_road, fastest_path } from "../main.mjs";
+import { add_intersection, add_road, empty_road_network, make_intersection, make_road, fastest_path } from "../backend/main.mjs";
 
 const _road_network = empty_road_network();
 

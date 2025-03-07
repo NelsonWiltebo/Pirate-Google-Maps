@@ -1,5 +1,5 @@
-import { for_each, List, pair, head, tail, list, append, Pair, filter } from './lib/list.mjs';
-import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from './lib/queue_array.mjs';
+import { for_each, List, pair, head, tail, list, append, Pair, filter } from '../lib/list.mjs';
+import { empty, is_empty, enqueue, dequeue, head as qhead, display_queue } from '../lib/queue_array.mjs';
 
 type Position = {
     x: number,
