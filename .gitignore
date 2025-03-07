@@ -3,4 +3,5 @@
 sketch.ts
 *.mjs
 lib/*.js
+!p5.js
 lib/*.mjs
