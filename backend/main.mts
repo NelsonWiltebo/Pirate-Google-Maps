@@ -6,7 +6,19 @@ type Position = {
     y: number
 }
 
-type IntersectionID = number;
+/**
+ * Represents a non-negative number.
+ * Invariant: Cannot be negative.
+ */
+type NonNegativeNumber = number;
+
+/**
+ * Represent a natural number.
+ * Invariant: Cannot be infinitely large.
+ */
+type NaturalNumber = NonNegativeNumber;
+
+type IntersectionID = NonNegativeNumber;
 
 /**
  * An intersection.
@@ -16,6 +28,28 @@ type IntersectionID = number;
 export type Intersection = {
     id: IntersectionID,
     pos: Position
+};
+
+// Cases for type 'Intersection'
+// Valid cases:
+
+const inter1: Intersection = { id: 1, pos: { x: 5, y: 10 } };
+const inter2: Intersection = { id: 2, pos: { x: 15, y: 25 } };
+
+// Invalid cases:
+
+const inter3: Intersection = { id: -1, pos: { x: 5, y: 10 } }; // ID must be non-negative.
+const inter4: Intersection = { id: -2, pos: { x: 15, y: 25 } }; // ID must be non-negative.
+
+// Edge cases:
+
+const edgeIntersection1: Intersection = { id: Number.MAX_SAFE_INTEGER, pos: { x: 10, y: 10 } };
+const edgeIntersection2: Intersection = { 
+    id: Number.MAX_SAFE_INTEGER, 
+    pos: { 
+        x: Number.MAX_SAFE_INTEGER, 
+        y: Number.MAX_SAFE_INTEGER 
+    } 
 };
 
 /**
@@ -29,11 +63,35 @@ export type Intersection = {
 export type Road = {
     connection: Pair<IntersectionID, IntersectionID>
     name: string,
-    speed_limit: number,
-    travel_time: number,
-    average_speed: number,
+    speed_limit: NaturalNumber,
+    travel_time: NaturalNumber,
+    average_speed: NaturalNumber,
     one_way: boolean
 }
+
+// Cases for type 'Road'
+// Valid cases:
+
+const road1: Road = make_road(1, 2, "Main Street", 60, 10, 45, false);
+const road2: Road = make_road(2, 3, "Highway 1", 80, 5, 60, true);
+
+// Invalid cases:
+
+const invalidRoad1: Road = make_road(1, 2, "Invalid Road", -50, 10, 45); // Negative speed limit
+const invalidRoad2: Road = make_road(1, 2, "Invalid Road", 50, -10, 45); // Negative travel time
+const invalidRoad3: Road = make_road(1, 2, "Invalid Road", 50, 10, -45); // Negative average speed
+
+// Edge cases:
+
+const road3: Road = make_road(1, 1, "Loop Road", 30, 5, 30, false); // Road going to the same intersection
+const road4: Road = make_road(3, 4, "Unnamed Road", 0, 1, 0, false); // Zero speed & travel time
+const edgeRoad1: Road = make_road(1, 2, "Zero Speed Road", 0, 10, 0); // Zero speed limit
+const edgeRoad2: Road = make_road(1, // speed_limit, travel_time, average_speed are very large.
+    2, 
+    "Infinite Road", 
+    Number.MAX_SAFE_INTEGER, 
+    Number.MAX_SAFE_INTEGER, 
+    Number.MAX_SAFE_INTEGER); 
 
 /**
  * A path from one intersection to another.
@@ -42,8 +100,18 @@ export type Road = {
  */
 export type Path = {
     path: Array<IntersectionID>,
-    time: number
+    time: NaturalNumber
 }
+
+// Cases for type 'Path'
+// Valid cases:
+
+const path1: Path = { path: [1, 2, 3], time: 30 };
+const path2: Path = { path: [], time: 0 }; // No path but valid
+
+// Invalid cases:
+
+const invalidPath1: Path = { path: [1, 2, 3], time: -10 }; // Negative time
 
 /**
  * Creates a road according to the following properties.
@@ -56,7 +124,7 @@ export type Path = {
  * @param _average_speed the average speed of the vechiles on the road
  * @returns the road with the specified properties
  */
-export function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: number, _travel_time: number, _average_speed: number, _one_way: boolean = false): Road {
+export function make_road(from: IntersectionID, to: IntersectionID, _name: string, _speed_limit: NonNegativeNumber, _travel_time: NonNegativeNumber, _average_speed: NonNegativeNumber, _one_way: boolean = false): Road {
     return {
         connection: pair(from, to),
         name: _name,
@@ -81,7 +149,7 @@ export function road_name(road: Road): string {
  * @param road the road from which to get the speed limit
  * @returns the speed limit of the road
  */
-export function road_speed_limit(road: Road): number {
+export function road_speed_limit(road: Road): NonNegativeNumber {
     return road.speed_limit;
 }
 
@@ -117,7 +185,7 @@ export function is_one_way(road: Road): boolean {
  * @param road the road from which to get the base travel time
  * @returns the base travel time of the road
  */
-export function base_travel_time(road: Road): number {
+export function base_travel_time(road: Road): NonNegativeNumber {
     return road.travel_time;
 }
 
@@ -127,10 +195,10 @@ export function base_travel_time(road: Road): number {
  * @param road the road to get the current travel time of
  * @returns the time it takes to travel the road
  */
-export function current_travel_time(road: Road): number {
-    const average_speed: number = road.average_speed;
-    const speed: number = road_speed_limit(road);
-    const travel_time: number = base_travel_time(road);
+export function current_travel_time(road: Road): NonNegativeNumber {
+    const average_speed: NonNegativeNumber = road.average_speed;
+    const speed: NonNegativeNumber = road_speed_limit(road);
+    const travel_time: NonNegativeNumber = base_travel_time(road);
 
     return average_speed < speed ? (speed / average_speed) * travel_time : travel_time;
 }
@@ -146,8 +214,27 @@ export type RoadNetwork = {
     intersections: Array<Intersection>,
     adj: Array<List<IntersectionID>>,
     edges: Array<Array<Road | undefined>>,
-    size: number
+    size: NonNegativeNumber
 }
+
+// Cases for type 'RoadNetwork'
+// Valid cases:
+
+let roadNetwork: RoadNetwork = empty_road_network();
+add_intersection(roadNetwork, make_intersection(1, 10, 10));
+add_intersection(roadNetwork, make_intersection(2, 20, 20));
+add_road(roadNetwork, make_road(1, 2, "Connector", 60, 10, 50));
+
+// Invalid cases:
+
+add_intersection(roadNetwork, make_intersection(-1, 10, 10)); // Invalid ID
+add_road(roadNetwork, make_road(1, 3, "Missing Road", 60, 10, 50)); // 3 does not exist
+add_intersection(roadNetwork, make_intersection(5, 10, 10)); // Skips ID 3 and 4
+
+// Edge cases:
+
+let edgeNetwork: RoadNetwork = empty_road_network();
+add_intersection(edgeNetwork, make_intersection(0, 0, 0)); // Smallest possible network
 
 /**
  * Creates an empty road network.
@@ -293,3 +380,24 @@ export function fastest_path({ adj, edges, size }: RoadNetwork,
 
     return { path: fastest_way, time: fastest_time };
 }
+
+// Cases for function 'fastest_path'
+// Valid cases:
+
+let rn: RoadNetwork = empty_road_network();
+add_intersection(rn, make_intersection(1, 0, 0));
+add_intersection(rn, make_intersection(2, 10, 10));
+add_intersection(rn, make_intersection(3, 20, 20));
+add_road(rn, make_road(1, 2, "Road A", 60, 10, 50));
+add_road(rn, make_road(2, 3, "Road B", 60, 10, 50));
+const validPath = fastest_path(rn, 1, 3);
+console.log(validPath);
+
+// Invalid cases:
+
+const invalidPath = fastest_path(rn, 1, 99); // Intersection 99 does not exist
+const circularPath = fastest_path(rn, 1, 1); // Start and end are the same
+
+// Edge cases:
+
+const noRoadsPath = fastest_path(empty_road_network(), 1, 2); // No intersections exist
