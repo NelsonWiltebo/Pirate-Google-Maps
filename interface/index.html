@@ -1,51 +1,56 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pirated Google Maps</title>
   <link rel="stylesheet" href="stylesheet.css">
-  <script type="module" src="../backend/main.mjs"></script>
-  <script type="module" src="../lib/p5.js"></script>
-  <script type="module" src="sketch.mjs"></script>
+  <script type="module" src="script.js"></script>
 </head>
 
 <body>
   <nav>
-      <ul class="nav-link">
-          <li style="font-weight: bold;">Pirated Google Maps</li>
-          <li>
-              <label>Select Map</label>
-          </li>
-      </ul>
+    <ul class="nav-link">
+      <li><a style="font-weight: bold;" href="index.html">Pirated Google Maps</a></li>
+      <li><a href="index.html">Select Map</a></li>
+    </ul>
   </nav>
   <div id="main">
-      <div id="map_area">
-          <div class="map_pin" id="start_pin">
-            <img src="images/start_pin.svg">
-          </div>
-          <div class="map_pin" id="destination_pin">
-            <img src="images/destination_pin.svg">
-          </div>
+    <div id="maps_to_select">
+
+      <div class="map_select" id="map_1">
+        <a href="map_page.html">
+          <img>
+          <span>
+            <hr>
+            Select
+          </span>
+        </a>
       </div>
-      <div id="directions_tab" class="container">
-          <h5>Starting point</h5>
-          <div class="side_by_side_input">
-              <input type="text" placeholder="X coordinate" id="starting_point_input_x">
-              <input type="text" placeholder="Y coordinate" id="starting_point_input_y">
-              <button class="point_select_button" id="starting_point_button"><img src="images/click_icon.svg"></button>
-          </div>
-          <br>
-          <h5>Destitnation point</h5>
-          <div class="side_by_side_input">
-              <input type="text" placeholder="X coordinate" id="destination_input_x">
-              <input type="text" placeholder="Y coordinate" id="destination_input_y">
-              <button class="point_select_button" id="destination_point_button"><img src="images/click_icon.svg"></button>
-          </div>
-          <br>
-          <button id="reset_map">Reset</button>
+
+      <div class="map_select" id="map_2">
+        <a href="map_page.html">
+          <img>
+          <span>
+            <hr>
+            Select
+          </span>
+        </a>
       </div>
+
+      <div class="map_select" id="map_3">
+        <a href="map_page.html">
+          <img>
+          <span>
+            <hr>
+            Select
+          </span>
+        </a>
+      </div>
+
+    </div>
+  </div>
   </div>
 </body>
 

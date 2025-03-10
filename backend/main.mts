@@ -228,6 +228,20 @@ export function add_road(road_network: RoadNetwork, road: Road): void {
 }
 
 /**
+ * Creates an array where every index is set to the specified value.
+ * @param size the amount of elements in the array
+ * @param value the value to be assigned to every index
+ * @returns an array where every index is assigned with 'value'
+ */
+function array_fill<T>(size: number, value: T): Array<T> {
+    const arr: Array<T> = [];
+    for(let i = 0; i < size; i++) {
+        arr[i] = value;
+    }
+    return arr;
+}
+
+/**
  * Get the fastest path from one location (intersection) to another.
  * @param adj the network of intersections adjacent to each other
  * @param edges the network of roads
@@ -239,26 +253,27 @@ export function add_road(road_network: RoadNetwork, road: Road): void {
 export function fastest_path({ adj, edges, size }: RoadNetwork,
     initial: IntersectionID, end: IntersectionID): Path {
     const pending = empty<number>();  // nodes to be processed
-    let parents: Array<Array<number>> = Array(size).fill(null); // track parent nodes
-    let time_to_get_to_node: Array<number> = Array(size).fill(Infinity);
+    let parents: Array<Array<number> | null> = array_fill(size, null);
+    let time_to_get_to_node: Array<number> = array_fill(size, Infinity);
     let fastest_way: Array<number> = [];
     let fastest_time: number = 0;
     
     // visit a node
-    function bfs_visit(current: number, parent: Array<number>, time: number) {
-        if (time < time_to_get_to_node[current]) {
+    function visit(current: number, parent: Array<number>, time: number) {
+        if (time < time_to_get_to_node[current]) { // Checking if the new travel time is faster
             parents[current] = parent;
-            time_to_get_to_node[current] = time;
+            time_to_get_to_node[current] = time; // Storing the time to reach the node
             if (current === end) {
                 fastest_way = [...parent, current];
                 fastest_time = time;
+            } else {
+                enqueue(current, pending);
             }
-            enqueue(current, pending);
         }
     }
 
     // visit initial intersection, and set the time it took to get there to 0
-    bfs_visit(initial, [], 0);
+    visit(initial, [], 0);
 
     while (!is_empty(pending)) {
         // dequeue the head node of the queue
@@ -271,7 +286,8 @@ export function fastest_path({ adj, edges, size }: RoadNetwork,
             const parent: Array<number> = parents[current] || [];
             let previous_travel_time = time_to_get_to_node[current];
             let travel_time = current_travel_time(edges[current][node]!);
-            bfs_visit(node, [...parent, current], previous_travel_time + travel_time);
+            visit(node, [...parent, current], 
+                previous_travel_time + travel_time);
         }, adjacent_nodes);
     }
 

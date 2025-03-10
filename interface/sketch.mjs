@@ -1,50 +1,35 @@
 import { for_each } from "../lib/list.mjs";
-import { add_intersection, add_road, empty_road_network, make_intersection, make_road, fastest_path } from "../backend/main.mjs";
+import { fastest_path } from "../backend/main.mjs";
+import { all_road_networks } from "./road_networks.js";
 
-const _road_network = empty_road_network();
+let current_road_network = undefined;
 
-const intersections = [
-  make_intersection(0, 300, 30),
-  make_intersection(1, 150, 120),
-  make_intersection(2, 450, 120),
-  make_intersection(3, 90, 240),
-  make_intersection(4, 210, 240),
-  make_intersection(5, 390, 240),
-  make_intersection(6, 510, 240),
-  make_intersection(7, 30, 360),
-  make_intersection(8, 120, 360),
-  make_intersection(9, 180, 360),
-  make_intersection(10, 360, 360),
-  make_intersection(11, 480, 360)
-];
+/**
+ * Changes the current road network to the specified new road network.
+ * @param {Object} new_road_network - The new road network to be set.
+ */
+export function change_current_road_network(new_road_network) {
+  if (new_road_network !== undefined) {
+    current_road_network = new_road_network;
+  } else {
+    console.log("Did not find map");
+  }
+}
 
-intersections.forEach(intersection => add_intersection(_road_network, intersection));
+// Retrieve stored road network when map_page.html loads
+window.onload = () => {
+    const savedMap = localStorage.getItem("selectedRoadNetwork");
+    if (savedMap) {
+        change_current_road_network(JSON.parse(savedMap));
+    }
+    setup();
+};
 
-const roads = [
-  make_road(0, 1, "0-1", 60, 60, 60),
-  make_road(0, 2, "0-1", 60, 60, 60),
-  make_road(1, 3, "0-1", 60, 60, 60),
-  make_road(1, 4, "0-1", 60, 60, 60),
-  make_road(2, 5, "0-1", 60, 60, 60),
-  make_road(2, 6, "0-1", 60, 60, 60),
-  make_road(3, 7, "0-1", 60, 60, 60),
-  make_road(3, 8, "0-1", 60, 60, 60),
-  make_road(4, 8, "0-1", 60, 60, 60),
-  make_road(4, 9, "0-1", 60, 60, 60),
-  make_road(5, 9, "0-1", 60, 60, 60),
-  make_road(5, 10, "0-1", 60, 60, 60),
-  make_road(6, 10, "0-1", 60, 60, 60),
-  make_road(6, 11, "0-1", 60, 60, 60),
-  make_road(7, 8, "0-1", 60, 60, 60),
-  make_road(8, 9, "0-1", 60, 60, 60),
-  make_road(9, 10, "0-1", 60, 60, 60),
-  make_road(10, 11, "0-1", 60, 60, 60)
-];
-
-roads.forEach(road => add_road(_road_network, road));
-
-let current_road_network = _road_network;
-
+/**
+ * Draws the road network by displaying its intersections.
+ * @param {Object} p - The p5.js instance.
+ * @param {Object} road_network - The road network to be drawn.
+ */
 function draw_road_network(p, road_network) {
   const intersections_size = road_network.size;
   const intersections = road_network.intersections;
@@ -55,16 +40,28 @@ function draw_road_network(p, road_network) {
   }
 }
 
+/**
+ * Draws an intersection node on the map.
+ * @param {Object} p - The p5.js instance.
+ * @param {number} i - The index of the node.
+ * @param {number} x - The x-coordinate of the node.
+ * @param {number} y - The y-coordinate of the node.
+ */
 function draw_node(p, i, x, y) {
-  p.fill(0);
+  p.fill(255);
   p.noStroke();
   p.textAlign(p.CENTER, p.CENTER);
   p.textSize(20);
-  p.fill(0);
-  p.fill(255);
   p.text(i, x, y - 20);
 }
 
+/**
+ * Colors the specified path on the road network.
+ * @param {Object} p - The p5.js instance.
+ * @param {Object} road_network - The road network containing the path.
+ * @param {Array} path - The path to be highlighted.
+ * @param {string} [color='blue'] - The color used to highlight the path.
+ */
 function color_path(p, road_network, path, color = "blue") {
   p.redraw();
   for (let i = 0; i < path.length - 1; i++) {
@@ -78,14 +75,24 @@ function color_path(p, road_network, path, color = "blue") {
   }
 }
 
+/**
+ * Draws an edge between two intersections.
+ * @param {Object} p - The p5.js instance.
+ * @param {Object} from_node - The starting node of the edge.
+ * @param {Object} to_node - The ending node of the edge.
+ * @param {string} [color='black'] - The color of the edge.
+ */
 function draw_edge(p, from_node, to_node, color = "black") {
   p.stroke(color);
   p.strokeWeight(6);
-  const pos_from = from_node.pos;
-  const pos_to = to_node.pos;
-  p.line(pos_from.x, pos_from.y, pos_to.x, pos_to.y);
+  p.line(from_node.pos.x, from_node.pos.y, to_node.pos.x, to_node.pos.y);
 }
 
+/**
+ * Draws the edges of the graph based on the road network.
+ * @param {Object} p - The p5.js instance.
+ * @param {Object} road_network - The road network to be drawn.
+ */
 function draw_graph_edges(p, road_network) {
   const road_network_size = road_network.size;
   const intersections = road_network.intersections;
@@ -100,34 +107,51 @@ function draw_graph_edges(p, road_network) {
   }
 }
 
+/**
+ * Initializes a p5.js sketch for rendering the road network.
+ * @param {number} width - The width of the canvas.
+ * @param {number} height - The height of the canvas.
+ * @param {Object} road_network - The road network to be displayed.
+ * @returns {Object} The p5.js sketch instance.
+ */
 function setup_sketch(width, height, road_network) {
-  const sketch = new p5((p) => {
-    p.setup = function () {
-      const canvas = p.createCanvas(width, height);
-      canvas.parent('map_area');
-      p.noLoop();
-    };
+  if (road_network !== undefined) {
+    const sketch = new p5((p) => {
+      p.setup = function () {
+        const canvas = p.createCanvas(width, height);
+        canvas.parent('map_area');
+        p.noLoop();
+      };
 
-    p.draw = function () {
-      p.clear();
+      p.draw = function () {
+        p.clear();
+        draw_graph_edges(p, road_network);
+      };
+    });
 
-      draw_graph_edges(p, road_network);
-    };
-  });
-
-  return sketch;
+    return sketch;
+  } else {
+    console.log("road-network is undefined");
+  }
 }
 
-const main_sketch = setup_sketch(600, 400, current_road_network);
-
-window.onload = () => {
-  setup();
-};
-
+/**
+ * Calculates the Euclidean distance between two points.
+ * @param {number} x1 - X-coordinate of the first point.
+ * @param {number} y1 - Y-coordinate of the first point.
+ * @param {number} x2 - X-coordinate of the second point.
+ * @param {number} y2 - Y-coordinate of the second point.
+ * @returns {number} The Euclidean distance between the points.
+ */
 function getDistance(x1, y1, x2, y2) {
   return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
+/**
+ * Finds the closest intersection to a given point.
+ * @param {Object} point - The point to check.
+ * @returns {Object} The closest intersection.
+ */
 function get_closest_intersection_from_point(point) {
   const map_bbox = document.querySelector('#map_area canvas').getBoundingClientRect();
 
@@ -154,8 +178,12 @@ function get_closest_intersection_from_point(point) {
 let is_selecting_starting_point = false;
 let is_selecting_destination_point = false;
 
+/**
+ * Sets up the website to use interface.
+ */
 function setup() {
-  console.log(current_road_network.intersections);
+  const main_sketch = setup_sketch(600, 400, current_road_network);
+
   const map_area = document.getElementById("map_area");
 
   const starting_point_button = document.getElementById('starting_point_button');
@@ -178,19 +206,39 @@ function setup() {
     y: document.getElementById('destination_input_y')
   }
 
+  /**
+   * Gets the node closest to a specified coordinate.
+   * @param {number} x the x coordinate to check for the closest node
+   * @param {number} y the y coordinate to check for the closest node
+   * @returns the ID of the closest node to the specified coordinate.
+   */
   function set_start_destination_from_position(x, y) {
     const closest_node = get_closest_intersection_from_point({x: x, y: y});
     return closest_node.id;
   }
 
+  /**
+   * Updates the fastest path, and recolors that path in the main_sketch.
+   */
   function updatePath() {
-    if (starting_node !== undefined && destination_node !== undefined) {
-      const directions = fastest_path(current_road_network, starting_node, destination_node);
-      color_path(main_sketch, current_road_network, directions.path);
+    if (starting_node !== undefined && 
+        destination_node !== undefined) {
+      const directions = fastest_path(current_road_network, 
+                                      starting_node, 
+                                      destination_node);
+      color_path(main_sketch, 
+                current_road_network, 
+                directions.path);
     }
   }
 
   const start_pin = document.getElementById('start_pin');
+  /**
+   * Placed the graphical representation of the start pin at the specified 
+   *  position.
+   * @param {number} x the x coordinate of the specified position
+   * @param {number} y the y coordinate of the specified position
+   */
   function set_start_pin_position(x, y) {
     const map_area_bbox = document.getElementById("map_area").getBoundingClientRect();
   
@@ -201,6 +249,12 @@ function setup() {
   }
   
   const destination_pin = document.getElementById('destination_pin');
+  /**
+   * Placed the graphical representation of the destination pin at the specified 
+   *  position.
+   * @param {number} x the x coordinate of the specified position
+   * @param {number} y the y coordinate of the specified position
+   */
   function set_destination_pin_position(x, y) {
     const map_area_bbox = document.getElementById("map_area").getBoundingClientRect();
   
@@ -219,7 +273,11 @@ function setup() {
     is_selecting_destination_point = !is_selecting_destination_point;
   });
 
-  map_area.addEventListener('click', (e) => {
+  /**
+   * Handles the logic of selecting a point (start/destination) with the cursor.
+   * @param {MouseEvent} e the event when the mouse click event is triggered
+   */
+  function select_point(e) {
     if (is_selecting_starting_point) {
       starting_point = { x: e.x, y: e.y };
       set_start_pin_position(starting_point.x, starting_point.y);
@@ -243,55 +301,55 @@ function setup() {
       is_selecting_destination_point = false;
       updatePath();
     } else { }
-  });
+  }
 
-  starting_point_input.x.addEventListener('input', (e) => {
-    if(starting_point === undefined) {
-      starting_point = {x: undefined, y: undefined};
-    }
-    starting_point.x = e.target.value;
-    if(starting_point.x !== undefined && starting_point.y !== undefined) {
-      starting_node = set_start_destination_from_position(starting_point.x, starting_point.y);
-      set_start_pin_position(starting_point.x, starting_point.y);
-      updatePath();
-    }
-  });
-  starting_point_input.y.addEventListener('input', (e) => {
-    if(starting_point === undefined) {
-      starting_point = {x: undefined, y: undefined};
-      updatePath();
-    }
-    starting_point.y = e.target.value;
-    if(starting_point.x !== undefined && starting_point.y !== undefined) {
-      starting_node = set_start_destination_from_position(starting_point.x, starting_point.y);
-      set_start_pin_position(starting_point.x, starting_point.y);
-      updatePath();
-    }
-  });
-  destination_input.x.addEventListener('input', (e) => {
-    if(destination_point === undefined) {
-      destination_point = {x: undefined, y: undefined};
-    }
-    destination_point.x = e.target.value;
-    if(destination_point.x !== undefined && destination_point.y !== undefined) {
-      destination_node = set_start_destination_from_position(destination_point.x, destination_point.y);
-      set_destination_pin_position(destination_point.x, destination_point.y);
-      updatePath();
-    }
-  });
-  destination_input.y.addEventListener('input', (e) => {
-    if(destination_point === undefined) {
-      destination_point = {x: undefined, y: undefined};
-    }
-    destination_point.y = e.target.value;
-    if(destination_point.x !== undefined && destination_point.y !== undefined) {
-      destination_node = set_start_destination_from_position(destination_point.x, destination_point.y);
-      set_destination_pin_position(destination_point.x, destination_point.y);
-      updatePath();
-    }
-    updatePath();
-  });
+  map_area.addEventListener('click', select_point);
 
+  /**
+   * 
+   * @param input the input element to check
+   * @param point the point (start/destination) to manipulate
+   * @param setPinPosition the function that manipulates the position of the 
+   *  graphical pin of the specified point
+   * @param setNode the function that gets the closest node to the specified
+   *  point
+   */
+  function handleInputUpdate(input, point, setPinPosition, setNode) {
+
+    // Helper function
+    function checkAndUpdate(point, setPinPosition, setNode) {
+      if (point.x !== undefined && point.y !== undefined) {
+        setNode(point.x, point.y);
+        setPinPosition(point.x, point.y);
+        updatePath();
+      }
+    }
+
+    input.x.addEventListener('input', (e) => {
+      if (!point) {
+        point = { x: undefined, y: undefined };
+      }
+      point.x = e.target.value;
+      checkAndUpdate(point, setPinPosition, setNode);
+    });
+  
+    input.y.addEventListener('input', (e) => {
+      if (!point) {
+        point = { x: undefined, y: undefined };
+      }
+      point.y = e.target.value;
+      checkAndUpdate(point, setPinPosition, setNode);
+    });
+  }
+  
+  // Applying abstraction for starting point and destination point
+  handleInputUpdate(starting_point_input, starting_point, set_start_pin_position, set_start_destination_from_position);
+  handleInputUpdate(destination_input, destination_point, set_destination_pin_position, set_start_destination_from_position);
+  
+
+  /**
+   * Resets the start/destination points and redraws the map to it's base state.
+   */
   function reset_map() {
     starting_point = undefined;
     destination_point = undefined;
