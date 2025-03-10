@@ -1,5 +1,5 @@
 import { for_each } from "../lib/list.mjs";
-import { fastest_path } from "../backend/main.mjs";
+import { current_travel_time, fastest_path } from "../backend/main.mjs";
 
 let current_road_network = undefined;
 let current_road_network_width = undefined;
@@ -34,13 +34,35 @@ window.onload = () => {
  * @param {Object} p - The p5.js instance.
  * @param {Object} road_network - The road network to be drawn.
  */
-function draw_road_network(p, road_network) {
+function draw_road_network_travel_time(p, road_network) {
   const intersections_size = road_network.size;
+  const intersection_adjs = road_network.adj;
   const intersections = road_network.intersections;
+  const roads = road_network.edges;
 
   for (let i = 0; i < intersections_size; i++) {
+    const intersection_adj = intersection_adjs[i];
+    for_each(intersection => {
+      const road = roads[i][intersection];
+      const from_intersection = intersections[i];
+      const to_intersection = intersections[intersection];
+
+      const middle_x = (from_intersection.pos.x + to_intersection.pos.x) / 2;
+      const middle_y = (from_intersection.pos.y + to_intersection.pos.y) / 2;
+
+      draw_text(p, Math.round(current_travel_time(road)) + " min", middle_x, middle_y);
+
+    }, intersection_adj);
+  }
+}
+
+function draw_road_time(p, road_network) {
+  const size = road_network.size;
+  const roads = road_network.roads;
+
+  for (let i = 0; i < size; i++) {
     const pos = intersections[i].pos;
-    draw_node(p, i, pos.x, pos.y);
+    draw_text(p, i, pos.x, pos.y);
   }
 }
 
@@ -51,7 +73,7 @@ function draw_road_network(p, road_network) {
  * @param {number} x - The x-coordinate of the node.
  * @param {number} y - The y-coordinate of the node.
  */
-function draw_node(p, i, x, y) {
+function draw_text(p, i, x, y) {
   p.fill(255);
   p.noStroke();
   p.textAlign(p.CENTER, p.CENTER);
@@ -130,6 +152,7 @@ function setup_sketch(width, height, road_network) {
       p.draw = function () {
         p.clear();
         draw_graph_edges(p, road_network);
+        draw_road_network_travel_time(p, road_network);
       };
     });
 
