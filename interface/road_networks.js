@@ -2,6 +2,14 @@ import { add_intersection, add_road, empty_road_network, make_intersection, make
 
 export const all_road_networks = [];
 
+function add_road_network(_road_network, _width, _height) {
+  all_road_networks.push({
+    road_network: _road_network,
+    width: _width,
+    height: _height
+  });
+}
+
 // Road-network 1
 
 const road_network_1 = empty_road_network();
@@ -46,7 +54,7 @@ const roads_1 = [
 
 roads_1.forEach(road => add_road(road_network_1, road));
 
-all_road_networks.push(road_network_1);
+add_road_network(road_network_1, 600, 400);
 
 // Road-network 2
 
@@ -85,4 +93,4 @@ const roads_2 = [
 
 roads_2.forEach(road => add_road(road_network_2, road));
 
-all_road_networks.push(road_network_2);
+add_road_network(road_network_2, 600, 400);

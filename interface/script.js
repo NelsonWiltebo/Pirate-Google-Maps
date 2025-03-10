@@ -1,6 +1,4 @@
 import { all_road_networks } from './road_networks.js'
-import { change_current_road_network } from './sketch.mjs';
-import * as sketch from './sketch.mjs'
 
 window.onload = () => {
     setup();

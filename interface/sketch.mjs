@@ -1,8 +1,9 @@
 import { for_each } from "../lib/list.mjs";
 import { fastest_path } from "../backend/main.mjs";
-import { all_road_networks } from "./road_networks.js";
 
 let current_road_network = undefined;
+let current_road_network_width = undefined;
+let current_road_network_height = undefined;
 
 /**
  * Changes the current road network to the specified new road network.
@@ -10,7 +11,10 @@ let current_road_network = undefined;
  */
 export function change_current_road_network(new_road_network) {
   if (new_road_network !== undefined) {
-    current_road_network = new_road_network;
+    current_road_network = new_road_network.road_network;
+    current_road_network_width = new_road_network.width;
+    current_road_network_height = new_road_network.height;
+
   } else {
     console.log("Did not find map");
   }
@@ -20,7 +24,7 @@ export function change_current_road_network(new_road_network) {
 window.onload = () => {
     const savedMap = localStorage.getItem("selectedRoadNetwork");
     if (savedMap) {
-        change_current_road_network(JSON.parse(savedMap));
+      change_current_road_network(JSON.parse(savedMap));
     }
     setup();
 };
@@ -182,7 +186,7 @@ let is_selecting_destination_point = false;
  * Sets up the website to use interface.
  */
 function setup() {
-  const main_sketch = setup_sketch(600, 400, current_road_network);
+  const main_sketch = setup_sketch(current_road_network_width, current_road_network_height, current_road_network);
 
   const map_area = document.getElementById("map_area");
 
