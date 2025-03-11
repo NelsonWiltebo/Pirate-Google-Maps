@@ -54,7 +54,7 @@ describe("Road Network Functions", () => {
         expect(network.edges[1][2]).toBeDefined();
     });
 
-    test("Reject roads with missing intersections", () => {
+    test("Handle unreachable destinations", () => {
         const network = empty_road_network();
         console.log = jest.fn(); // Suppress console output
         add_road(network, make_road(1, 2, "Missing Road", 60, 10, 50));
