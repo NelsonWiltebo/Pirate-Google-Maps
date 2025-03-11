@@ -39,24 +39,24 @@ const intersections_1 = [
 intersections_1.forEach(intersection => add_intersection(road_network_1, intersection));
 
 const roads_1 = [
-  make_road(0, 1, "0-1", 60, 60, 60),
-  make_road(0, 2, "0-2", 60, 60, 60),
-  make_road(1, 3, "1-3", 60, 60, 60),
-  make_road(1, 4, "1-4", 60, 60, 60),
-  make_road(2, 5, "2-5", 60, 60, 60),
-  make_road(2, 6, "2-6", 60, 60, 60),
-  make_road(3, 7, "3-7", 60, 60, 60),
-  make_road(3, 8, "3-8", 60, 60, 60),
-  make_road(4, 8, "4-8", 60, 60, 60),
-  make_road(4, 9, "4-9", 60, 60, 60),
-  make_road(5, 9, "5-9", 60, 60, 60),
-  make_road(5, 10, "5-10", 60, 60, 60),
-  make_road(6, 10, "6-10", 60, 60, 60),
-  make_road(6, 11, "6-11", 60, 60, 60),
-  make_road(7, 8, "7-8", 60, 60, 60),
-  make_road(8, 9, "7-9", 60, 60, 60),
-  make_road(9, 10, "9-10", 60, 60, 60),
-  make_road(10, 11, "10-11", 60, 60, 60)
+  make_road(0, 1, "0-1", 80, 60, 70),
+  make_road(0, 2, "0-2", 60, 30, 60),
+  make_road(1, 3, "1-3", 120, 150, 40),
+  make_road(1, 4, "1-4", 70, 20, 50),
+  make_road(2, 5, "2-5", 50, 10, 40),
+  make_road(2, 6, "2-6", 80, 50, 80),
+  make_road(3, 7, "3-7", 80, 45, 80),
+  make_road(3, 8, "3-8", 100, 120, 90),
+  make_road(4, 8, "4-8", 30, 4, 30),
+  make_road(4, 9, "4-9", 120, 30, 120),
+  make_road(5, 9, "5-9", 50, 15, 20),
+  make_road(5, 10, "5-10", 40, 6, 40),
+  make_road(6, 10, "6-10", 70, 20, 70),
+  make_road(6, 11, "6-11", 60, 10, 40),
+  make_road(7, 8, "7-8", 90, 20, 75),
+  make_road(8, 9, "7-9", 30, 4, 30),
+  make_road(9, 10, "9-10", 70, 7, 70),
+  make_road(10, 11, "10-11", 50, 10, 40)
 ];
 
 roads_1.forEach(road => add_road(road_network_1, road));
