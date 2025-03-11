@@ -22,11 +22,11 @@ export function change_current_road_network(new_road_network) {
 
 // Retrieve stored road network when map_page.html loads
 window.onload = () => {
-    const savedMap = localStorage.getItem("selectedRoadNetwork");
-    if (savedMap) {
-      change_current_road_network(JSON.parse(savedMap));
-    }
-    setup();
+  const savedMap = localStorage.getItem("selectedRoadNetwork");
+  if (savedMap) {
+    change_current_road_network(JSON.parse(savedMap));
+  }
+  setup();
 };
 
 /**
@@ -240,7 +240,7 @@ function setup() {
    * @returns the ID of the closest node to the specified coordinate.
    */
   function set_start_destination_from_position(x, y) {
-    const closest_node = get_closest_intersection_from_point({x: x, y: y});
+    const closest_node = get_closest_intersection_from_point({ x: x, y: y });
     return closest_node.id;
   }
 
@@ -248,14 +248,14 @@ function setup() {
    * Updates the fastest path, and recolors that path in the main_sketch.
    */
   function updatePath() {
-    if (starting_node !== undefined && 
-        destination_node !== undefined) {
-      const directions = fastest_path(current_road_network, 
-                                      starting_node, 
-                                      destination_node);
-      color_path(main_sketch, 
-                current_road_network, 
-                directions.path);
+    if (starting_node !== undefined &&
+      destination_node !== undefined) {
+      const directions = fastest_path(current_road_network,
+        starting_node,
+        destination_node);
+      color_path(main_sketch,
+        current_road_network,
+        directions.path);
     }
   }
 
@@ -268,13 +268,13 @@ function setup() {
    */
   function set_start_pin_position(x, y) {
     const map_area_bbox = document.getElementById("map_area").getBoundingClientRect();
-  
+
     const pin_bbox = start_pin.getBoundingClientRect();
     start_pin.style.visibility = 'visible';
     start_pin.style.left = x - pin_bbox.width / 2 - map_area_bbox.x + 'px';
     start_pin.style.top = y - pin_bbox.height / 2 - map_area_bbox.y + 'px';
   }
-  
+
   const destination_pin = document.getElementById('destination_pin');
   /**
    * Placed the graphical representation of the destination pin at the specified 
@@ -284,7 +284,7 @@ function setup() {
    */
   function set_destination_pin_position(x, y) {
     const map_area_bbox = document.getElementById("map_area").getBoundingClientRect();
-  
+
     const pin_bbox = destination_pin.getBoundingClientRect();
     destination_pin.style.visibility = 'visible';
     destination_pin.style.left = x - pin_bbox.width / 2 - map_area_bbox.x + 'px';
@@ -304,7 +304,7 @@ function setup() {
    * Handles the logic of selecting a point (start/destination) with the cursor.
    * @param {MouseEvent} e the event when the mouse click event is triggered
    */
-  function select_point(e) {
+  function cursor_select_point(e) {
     if (is_selecting_starting_point) {
       starting_point = { x: e.x, y: e.y };
       set_start_pin_position(starting_point.x, starting_point.y);
@@ -330,49 +330,47 @@ function setup() {
     } else { }
   }
 
-  map_area.addEventListener('click', select_point);
+  map_area.addEventListener('click', cursor_select_point);
 
   /**
-   * 
-   * @param input the input element to check
-   * @param point the point (start/destination) to manipulate
-   * @param setPinPosition the function that manipulates the position of the 
-   *  graphical pin of the specified point
-   * @param setNode the function that gets the closest node to the specified
-   *  point
-   */
-  function handleInputUpdate(input, point, setPinPosition, setNode) {
+ * Updates the selected point (starting or destination) based on user input.
+ * @param {Event} e The event triggered by the input change
+ * @param {string} pointType Either 'starting' or 'destination'
+ */
+  function updatePoint(e, pointType) {
+    let point, input, nodeSetter, pinSetter;
 
-    // Helper function
-    function checkAndUpdate(point, setPinPosition, setNode) {
-      if (point.x !== undefined && point.y !== undefined) {
-        setNode(point.x, point.y);
-        setPinPosition(point.x, point.y);
-        updatePath();
-      }
+    if (pointType === 'starting') {
+      if (!starting_point) starting_point = { x: undefined, y: undefined };
+      point = starting_point;
+      input = starting_point_input;
+      nodeSetter = (x, y) => (starting_node = set_start_destination_from_position(x, y));
+      pinSetter = set_start_pin_position;
+    } else {
+      if (!destination_point) destination_point = { x: undefined, y: undefined };
+      point = destination_point;
+      input = destination_input;
+      nodeSetter = (x, y) => (destination_node = set_start_destination_from_position(x, y));
+      pinSetter = set_destination_pin_position;
     }
 
-    input.x.addEventListener('input', (e) => {
-      if (!point) {
-        point = { x: undefined, y: undefined };
-      }
-      point.x = e.target.value;
-      checkAndUpdate(point, setPinPosition, setNode);
-    });
-  
-    input.y.addEventListener('input', (e) => {
-      if (!point) {
-        point = { x: undefined, y: undefined };
-      }
-      point.y = e.target.value;
-      checkAndUpdate(point, setPinPosition, setNode);
-    });
+    point[e.target.name] = e.target.value;
+
+    if (point.x !== undefined && point.y !== undefined) {
+      nodeSetter(point.x, point.y);
+      pinSetter(point.x, point.y);
+      updatePath();
+    }
   }
-  
-  // Applying abstraction for starting point and destination point
-  handleInputUpdate(starting_point_input, starting_point, set_start_pin_position, set_start_destination_from_position);
-  handleInputUpdate(destination_input, destination_point, set_destination_pin_position, set_start_destination_from_position);
-  
+
+  ['x', 'y'].forEach((axis) => {
+    starting_point_input[axis].name = axis;
+    starting_point_input[axis].addEventListener('input', (e) => updatePoint(e, 'starting'));
+
+    destination_input[axis].name = axis;
+    destination_input[axis].addEventListener('input', (e) => updatePoint(e, 'destination'));
+  });
+
 
   /**
    * Resets the start/destination points and redraws the map to it's base state.
@@ -380,7 +378,7 @@ function setup() {
   function reset_map() {
     starting_point = undefined;
     destination_point = undefined;
-  
+
     starting_node = undefined;
     destination_node = undefined;
 
@@ -392,7 +390,7 @@ function setup() {
 
     destination_pin.style.visibility = 'hidden';
     start_pin.style.visibility = 'hidden';
-  
+
     main_sketch.redraw();
   }
 

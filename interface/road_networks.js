@@ -1,4 +1,4 @@
-import { add_intersection, add_road, empty_road_network, make_intersection, make_road, RoadNetwork } from "../backend/main.mjs";
+import { add_intersection, add_road, empty_road_network, make_intersection, make_road } from "../backend/main.mjs";
 
 export const all_road_networks = [];
 
