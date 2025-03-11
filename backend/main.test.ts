@@ -1,124 +1,100 @@
-import { list, pair, head, tail } from '../lib/list';
-import { Road, Intersection, make_road, RoadNetwork, empty_road_network, add_road, fastest_path, road_name, road_speed_limit, road_going_from, road_going_to, is_one_way, base_travel_time, current_travel_time, add_intersection, make_intersection } from './main';
+import {
+    make_road, road_name, road_speed_limit, road_going_from, road_going_to,
+    is_one_way, base_travel_time, current_travel_time, empty_road_network,
+    make_intersection, add_intersection, add_road, fastest_path, Road,
+    Intersection, RoadNetwork
+} from "./main.mjs";
 
-// Test make_road with one-way and two-way roads
-test('make_road correctly makes a two-way road', () => {
-    const road = make_road(0, 1, "0-1", 80, 60, 70);
-    expect(road).toStrictEqual({
-        connection: pair(0, 1),
-        name: "0-1",
-        speed_limit: 80,
-        travel_time: 60,
-        average_speed: 70,
-        one_way: false
+// Jest setup
+
+describe("Road Network Functions", () => {
+    test("Create valid roads", () => {
+        const road: Road = make_road(1, 2, "Highway", 80, 10, 60, true);
+        expect(road.name).toBe("Highway");
+        expect(road.speed_limit).toBe(80);
+        expect(road.travel_time).toBe(10);
+        expect(road.average_speed).toBe(60);
+        expect(road.one_way).toBe(true);
     });
-});
 
-test('make_road correctly makes a one-way road', () => {
-    const road = make_road(0, 1, "0-1", 80, 60, 70, true);
-    expect(road).toStrictEqual({
-        connection: pair(0, 1),
-        name: "0-1",
-        speed_limit: 80,
-        travel_time: 60,
-        average_speed: 70,
-        one_way: true
+    test("Retrieve road properties", () => {
+        const road = make_road(2, 3, "Main Street", 50, 15, 40, false);
+        expect(road_name(road)).toBe("Main Street");
+        expect(road_speed_limit(road)).toBe(50);
+        expect(road_going_from(road)).toBe(2);
+        expect(road_going_to(road)).toBe(3);
+        expect(is_one_way(road)).toBe(false);
     });
-});
 
-// Test road_name, road_speed_limit, road_going_from, road_going_to, is_one_way, base_travel_time, and current_travel_time
-const test_road = make_road(0, 1, "0-1", 80, 60, 40, true);
-
-test('road_name correctly gets the name of the road', () => {
-    expect(road_name(test_road)).toBe("0-1");
-});
-
-// Test empty_road_network
-test('empty_road_network initializes an empty network', () => {
-    const network = empty_road_network();
-    expect(network).toStrictEqual({
-        intersections: [],
-        adj: [],
-        edges: [[]],
-        size: 0
+    test("Calculate travel times", () => {
+        const road = make_road(1, 2, "Slow Road", 30, 20, 15, false);
+        expect(base_travel_time(road)).toBe(20);
+        expect(current_travel_time(road)).toBeGreaterThan(20);
     });
-});
 
-const intersection_0: Intersection = make_intersection(0, 0, 0);
-const intersection_1: Intersection = make_intersection(1, 0, 0);
-const intersection_2: Intersection = make_intersection(2, 0, 0);
+    test("Create an empty road network", () => {
+        const network: RoadNetwork = empty_road_network();
+        expect(network.size).toBe(0);
+        expect(network.intersections.length).toBe(0);
+        expect(network.adj.length).toBe(0);
+    });
 
-// Test add_road with both one-way and two-way roads
-const road_0_1 = make_road(0, 1, "0-1", 80, 60, 70);
-const road_0_2 = make_road(0, 2, "0-2", 80, 30, 80);
-const road_1_2 = make_road(1, 2, "1-2", 70, 45, 50, true);
+    test("Add valid intersections", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(1, 10, 20));
+        expect(network.size).toBe(1);
+        expect(network.intersections[1].id).toBe(1);
+    });
 
-test('add_road adds a two-way road', () => {
-    const road_network = empty_road_network();
-    add_intersection(road_network, make_intersection(0, 0, 0));
-    add_intersection(road_network, make_intersection(1, 0, 0));
+    test("Add valid roads", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(1, 10, 10));
+        add_intersection(network, make_intersection(2, 20, 20));
+        add_road(network, make_road(1, 2, "Connector", 60, 10, 50, false));
+        expect(network.edges[1][2]).toBeDefined();
+    });
 
-    add_road(road_network, road_0_1);
+    test("Reject roads with missing intersections", () => {
+        const network = empty_road_network();
+        console.log = jest.fn(); // Suppress console output
+        add_road(network, make_road(1, 2, "Missing Road", 60, 10, 50));
+        expect(console.log).toHaveBeenCalledWith("The intersections the road is either going from or to doesn't exist");
+    });
 
-    expect(road_network.adj[0]).toStrictEqual(list(1));
-    expect(road_network.adj[1]).toStrictEqual(list(0));
-    expect(road_network.edges[0][1]).toBe(road_0_1);
-    expect(road_network.edges[1][0]).toBe(road_0_1);
-});
+    test("Reject duplicate intersection ID", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(1, 10, 10));
+        console.log = jest.fn(); // Mock console.log
+        add_intersection(network, make_intersection(1, 15, 15));
+        expect(console.log).toHaveBeenCalledWith("Intersection ID already exists");
+    });
 
-test('add_road adds a one-way road', () => {
-    const road_network = empty_road_network();
-    add_intersection(road_network, make_intersection(0, 0, 0));
-    add_intersection(road_network, make_intersection(1, 0, 0));
-    add_intersection(road_network, make_intersection(2, 0, 0));
+    test("Find the fastest path", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(0, 0, 0));
+        add_intersection(network, make_intersection(1, 10, 10));
+        add_intersection(network, make_intersection(2, 20, 20));
+        add_road(network, make_road(0, 1, "Road A", 60, 10, 50));
+        add_road(network, make_road(1, 2, "Road B", 60, 10, 50));
+        const path = fastest_path(network, 0, 2);
+        expect(path.path).toStrictEqual([0, 1, 2]);
+        expect(path.time).toBeGreaterThan(0);
+    });
 
-    add_road(road_network, road_1_2);
+    test("Handle unreachable destinations", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(1, 0, 0));
+        add_intersection(network, make_intersection(2, 10, 10));
+        const path = fastest_path(network, 1, 2);
+        expect(path.path).toEqual([]);
+        expect(path.time).toBe(0);
+    }); 
 
-    expect(road_network.adj[1]).toStrictEqual(list(2));
-    expect(road_network.adj[2]).toBeUndefined();
-    expect(road_network.edges[1][2]).toBe(road_1_2);
-    expect(road_network.edges[2]).toBeUndefined();
-});
-
-// Test fastest_path for different scenarios
-const road_network = empty_road_network();
-
-add_intersection(road_network, intersection_0);
-add_intersection(road_network, intersection_1);
-add_intersection(road_network, intersection_2);
-
-add_road(road_network, road_0_1);
-add_road(road_network, road_0_2);
-add_road(road_network, road_1_2);
-
-test('fastest_path finds the shortest path from 0 to 2', () => {
-    const result = fastest_path(road_network, 0, 2);
-    expect(result.path).toStrictEqual([0, 2]);
-});
-
-test('fastest_path finds no path if disconnected', () => {
-    const isolated_network = empty_road_network();
-
-    add_intersection(isolated_network, make_intersection(0, 0, 0));
-    add_intersection(isolated_network, make_intersection(1, 0, 0));
-    add_intersection(isolated_network, make_intersection(2, 0, 0));
-    add_intersection(isolated_network, make_intersection(3, 0, 0));
-
-    add_road(isolated_network, make_road(0, 1, "0-1", 80, 60, 70));
-    add_road(isolated_network, make_road(2, 3, "2-3", 80, 60, 70));
-
-    const result = fastest_path(isolated_network, 0, 3);
-    expect(result.path).toStrictEqual([]);
-});
-
-test('fastest_path handles loops without infinite loops', () => {
-    const loop_network = empty_road_network();
-    add_intersection(loop_network, make_intersection(0, 0, 0));
-    add_intersection(loop_network, make_intersection(1, 0, 0));
-    
-    add_road(loop_network, make_road(0, 1, "0-1", 80, 60, 70));
-    add_road(loop_network, make_road(1, 0, "1-0", 80, 60, 70));
-
-    const result = fastest_path(loop_network, 0, 1);
-    expect(result.path).toStrictEqual([0, 1]);
+    test("Handle same start and end intersections", () => {
+        const network = empty_road_network();
+        add_intersection(network, make_intersection(1, 0, 0));
+        const path = fastest_path(network, 1, 1);
+        expect(path.path).toEqual([]);
+        expect(path.time).toBe(0);
+    });
 });

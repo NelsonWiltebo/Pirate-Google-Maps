@@ -1,7 +1,14 @@
-import { add_intersection, add_road, empty_road_network, make_intersection, make_road } from "../backend/main.mjs";
+import { add_intersection, add_road, empty_road_network, make_intersection, make_road, RoadNetwork } from "../backend/main.mjs";
 
 export const all_road_networks = [];
 
+/**
+ * Adds a road-network to the websites accessible road-networks.
+ * @precondition _width >= 0 & _height >= 0
+ * @param {RoadNetwork} _road_network 
+ * @param {number} _width 
+ * @param {number} _height 
+ */
 function add_road_network(_road_network, _width, _height) {
   all_road_networks.push({
     road_network: _road_network,
